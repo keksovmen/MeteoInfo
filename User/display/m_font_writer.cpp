@@ -6,12 +6,15 @@ using namespace display;
 
 
 
-extern const uint8_t glyphs[];
+extern const uint8_t glyphs_small[];
+extern const uint8_t glyphs_medium[];
 
 
 
-const std::array<FontWriter::FontEntry, 1> FontWriter::_fonts = {
-	{{8, 16, ' ', 'Z', glyphs}}
+const std::array<FontWriter::FontEntry, static_cast<int>(FontWriter::FontSize::COUNT)> FontWriter::_fonts = {
+	{{8, 8, 5, ' ', '9', glyphs_small},
+	{8, 16, 8, ' ', 'Z', glyphs_medium},
+	}
 };
 
 FontWriter::FontWriter(DisplayWriter& disp)
@@ -35,6 +38,6 @@ void FontWriter::drawChar(int x, int y, char c)
 void FontWriter::drawStr(int x, int y, std::string_view str)
 {
 	for (size_t i = 0; i < str.length(); i++) {
-        drawChar(x + i * _activeFont->width, y, str[i]);
+        drawChar(x + i * _activeFont->spaceSize, y, str[i]);
     }
 }

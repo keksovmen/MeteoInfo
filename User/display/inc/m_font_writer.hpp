@@ -19,7 +19,7 @@ namespace display
 			{
 				SMALL,
 				MEDIUM,
-				HUGE
+				COUNT
 			};
 
 
@@ -34,7 +34,7 @@ namespace display
 			template<FontSize S>
 			constexpr void changeSize()
 			{
-				static_assert(static_cast<int>(S) < static_cast<int>(FontSize::MEDIUM));
+				static_assert(static_cast<int>(S) < static_cast<int>(FontSize::COUNT));
 				_activeFont = &_fonts[static_cast<int>(S)];
 
 			}
@@ -45,6 +45,7 @@ namespace display
 			{
 				int width;
 				int height;
+				int spaceSize;
 				char firstLetter;
 				char lastLetter;
 				const uint8_t* symbols;
@@ -52,7 +53,7 @@ namespace display
 
 
 
-			static const std::array<FontEntry, 1> _fonts;
+			static const std::array<FontEntry, static_cast<int>(FontSize::COUNT)> _fonts;
 
 
 

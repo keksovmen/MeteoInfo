@@ -136,9 +136,14 @@ int main (void) {
 		w.drawLine(120, 8, 127, 15);
 		w.drawLine(120, 15, 127, 8);
 
+		font.changeSize<display::FontWriter::FontSize::MEDIUM>();
 		font.drawStr(0, 0, "%+-_*!@#");
-		font.drawStr(0, 32, "123456");
-		font.drawStr(64, 48, "ABCDE");
+
+		font.changeSize<display::FontWriter::FontSize::SMALL>();
+		font.drawStr(0, 32, "+ 0123456789 -");
+
+		font.changeSize<display::FontWriter::FontSize::MEDIUM>();
+		font.drawStr(64, 48, "ABCDEZ");
 	});
 
 	// ssd1315.drawRegion(110, 0, 10, 5, tmp);
