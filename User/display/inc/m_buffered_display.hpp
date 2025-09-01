@@ -67,6 +67,5 @@ namespace display
 
 	
 
-	template class BufferedWriter<128>;
 	template class PartitionBufferedWriter<128>;
 }
