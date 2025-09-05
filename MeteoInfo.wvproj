@@ -10,7 +10,8 @@
 			"mcu": "CH32V003F4P6",
 			"description": "Website: https://www.wch.cn/products/CH32V003.html?\\nThe CH32V003 series is an industral-grade general-purpose microcontroller designed based on the highland barley RISCV-V2A core, and supports 48MHz system frequency in terms of product functions. This series has the characteristics of wide voltage, single-wire debugging, low power consumption, ultra-small package and so on. Provide common peripheral functions, built-in 1 set of DMA controller, 1 set of 10-bit analog-to-digital conversion ADC, 1 set of op amp comparator, multiple sets of timers, standard communication interfaces such as USART, I2C, SPI, etc. The rated working voltage of the product is 3.3V or 5V, and the working temperature range is -40'C~85'C industrial grade.",
 			"link": "WCH-Link",
-			"peripheral_version": "1.9"
+			"peripheral_version": "1.9",
+			"calibrateSupport": false
 		},
 		"linkedFolders": [],
 		"removedResources": [
@@ -40,24 +41,6 @@
 				"post_script": "",
 				"post_script_description": "",
 				"excludeResources": [],
-				"riscvTargetProcessor": {
-					"architecture": "rv32e",
-					"multiply_extension": false,
-					"atomic_extension": false,
-					"floating_point": "none",
-					"compressed_extension": true,
-					"extra_compressed_extension": true,
-					"bit_extension": false,
-					"multiplication_subset_of_the_M_extension": false,
-					"integer_ABI": "ilp32e",
-					"floating_point_ABI": "none",
-					"tuning": "default",
-					"code_model": "default",
-					"small_data_limit": 0,
-					"align": "default",
-					"save_restore": true,
-					"other_target_flags": ""
-				},
 				"optimization": {
 					"level": "debug",
 					"message_length": true,
@@ -141,7 +124,8 @@
 							"${project}/Debug",
 							"${project}/Core",
 							"${project}/User",
-							"${project}/Peripheral/inc"
+							"${project}/Peripheral/inc",
+							"${project}/Libs/pff3a/source"
 						],
 						"include_system_paths": [],
 						"include_files": []
@@ -178,13 +162,14 @@
 							"${project}/Peripheral/inc",
 							"${project}/User",
 							"${project}/User/display/inc",
-							"${project}/User/periph/inc"
+							"${project}/User/periph/inc",
+							"${project}/Libs/pff3a/source"
 						],
 						"include_system_paths": [],
 						"include_files": []
 					},
 					"optimization": {
-						"cpp_language_standard": "cpp2a",
+						"cpp_language_standard": "gnucpp2a",
 						"abi_version": "0",
 						"do_not_use_exceptions": true,
 						"do_not_use_rtti": true,
@@ -309,24 +294,6 @@
 					"show_totals": false,
 					"other_flags": ""
 				},
-				"component_toolchain": "${WCH:Toolchain:GCC12}",
-				"name": "obj",
-				"configVariables": []
-			},
-			{
-				"buildArtifact": {
-					"artifact_name": "${ProjName}",
-					"artifact_extension": "elf",
-					"output_prefix": "",
-					"artifact_type": "Executable"
-				},
-				"parallelizationNumber": "optimal",
-				"stop_on_first_build_error": true,
-				"pre_script": "",
-				"pre_script_description": "",
-				"post_script": "",
-				"post_script_description": "",
-				"excludeResources": [],
 				"riscvTargetProcessor": {
 					"architecture": "rv32e",
 					"multiply_extension": false,
@@ -345,6 +312,24 @@
 					"save_restore": true,
 					"other_target_flags": ""
 				},
+				"component_toolchain": "${WCH:Toolchain:GCC12}",
+				"name": "obj",
+				"configVariables": []
+			},
+			{
+				"buildArtifact": {
+					"artifact_name": "${ProjName}",
+					"artifact_extension": "elf",
+					"output_prefix": "",
+					"artifact_type": "Executable"
+				},
+				"parallelizationNumber": "optimal",
+				"stop_on_first_build_error": true,
+				"pre_script": "",
+				"pre_script_description": "",
+				"post_script": "",
+				"post_script_description": "",
+				"excludeResources": [],
 				"optimization": {
 					"level": "size",
 					"message_length": true,
@@ -588,6 +573,24 @@
 					"hex": false,
 					"show_totals": false,
 					"other_flags": ""
+				},
+				"riscvTargetProcessor": {
+					"architecture": "rv32e",
+					"multiply_extension": false,
+					"atomic_extension": false,
+					"floating_point": "none",
+					"compressed_extension": true,
+					"extra_compressed_extension": true,
+					"bit_extension": false,
+					"multiplication_subset_of_the_M_extension": false,
+					"integer_ABI": "ilp32e",
+					"floating_point_ABI": "none",
+					"tuning": "default",
+					"code_model": "default",
+					"small_data_limit": 0,
+					"align": "default",
+					"save_restore": true,
+					"other_target_flags": ""
 				},
 				"component_toolchain": "${WCH:Toolchain:GCC8}",
 				"name": "dbg",

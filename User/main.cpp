@@ -1,8 +1,11 @@
 #include "ch32v00x.h"
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "pff.h"
 
 #include "debug.h"
 
@@ -27,6 +30,8 @@ static periph::I2C_Peripheral i2c{
 static display::HalDisplaySSD1315 ssd1315(i2c);
 static display::PartitionBufferedWriter<128> writer(ssd1315);
 static display::FontWriter font(writer);
+
+static FATFS _fs;
 
 
 
@@ -109,6 +114,37 @@ int main (void) {
 
 
 	writer.flush();
+
+	FRESULT res = pf_mount(&_fs);
+	printf("Mount result = %d\r\n", res);
+
+	res = pf_open("ASDTXT~1.TXT");
+	// res = pf_open("LOG.TXT");
+	// res = pf_open("ASD.TXT");
+	printf("Open result = %d\r\n", res);
+
+	UINT _;
+	res = pf_write("test_text\r\n", sizeof("test_text\r\n"), &_);
+	printf("Write result = %d, written = %d\r\n", res, _);
+
+	res = pf_mount(&_fs);
+	printf("Mount result = %d\r\n", res);
+
+	DIR dir;
+	res = pf_opendir(&dir, "");
+	printf("Open dir result = %d\r\n", res);
+
+	while(true){
+		FILINFO info;
+		res = pf_readdir(&dir, &info);
+		printf("Read dir result = %d\r\n", res);
+
+		printf("Dir = %s\r\n", info.fname);
+		if(strlen(info.fname) == 0){
+			break;
+		}
+	}
+
 
     while (1) {
         // printf ("Cycle\r\n");
