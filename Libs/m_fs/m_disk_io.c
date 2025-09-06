@@ -1,11 +1,8 @@
 #include "m_disk_io.h"
 
-
-
 #include "ch32v00x.h"
 #include "ch32v00x_gpio.h"
 #include "ch32v00x_spi.h"
-#include "ch32v00x_rcc.h"
 #include "debug.h"
 
 
@@ -22,28 +19,28 @@
 #define _SD_SPI_MOSI_PIN    GPIO_Pin_6
 
 /* Definitions for MMC/SDC command */
-#define CMD0	(0x40+0)	/* GO_IDLE_STATE */
-#define CMD1	(0x40+1)	/* SEND_OP_COND (MMC) */
-#define	ACMD41	(0xC0+41)	/* SEND_OP_COND (SDC) */
-#define CMD8	(0x40+8)	/* SEND_IF_COND */
-#define CMD16	(0x40+16)	/* SET_BLOCKLEN */
-#define CMD17	(0x40+17)	/* READ_SINGLE_BLOCK */
-#define CMD24	(0x40+24)	/* WRITE_BLOCK */
-#define CMD55	(0x40+55)	/* APP_CMD */
-#define CMD58	(0x40+58)	/* READ_OCR */
+#define _CMD0	(0x40+0)	/* GO_IDLE_STATE */
+#define _CMD1	(0x40+1)	/* SEND_OP_COND (MMC) */
+#define	_ACMD41	(0xC0+41)	/* SEND_OP_COND (SDC) */
+#define _CMD8	(0x40+8)	/* SEND_IF_COND */
+#define _CMD16	(0x40+16)	/* SET_BLOCKLEN */
+#define _CMD17	(0x40+17)	/* READ_SINGLE_BLOCK */
+#define _CMD24	(0x40+24)	/* WRITE_BLOCK */
+#define _CMD55	(0x40+55)	/* APP_CMD */
+#define _CMD58	(0x40+58)	/* READ_OCR */
 
 /* Card type flags (CardType) */
-#define CT_MMC				0x01	/* MMC version 3 */
-#define CT_SD1				0x02	/* SD version 1 */
-#define CT_SD2				0x04	/* SD version 2+ */
-#define CT_BLOCK			0x08	/* Block addressing */
+#define _CT_MMC				0x01	/* MMC version 3 */
+#define _CT_SD1				0x02	/* SD version 1 */
+#define _CT_SD2				0x04	/* SD version 2+ */
+#define _CT_BLOCK			0x08	/* Block addressing */
 
-#define BLOCK_SIZE M_FS_CONF_BLOCK_SIZE
+#define _BLOCK_SIZE M_FS_CONF_BLOCK_SIZE
 
 
 
 static uint8_t _card_type = 0;
-static uint8_t _buffer[BLOCK_SIZE];
+static uint8_t _buffer[_BLOCK_SIZE];
 static uint32_t _buffer_sector = 123456789;
 
 
@@ -57,10 +54,7 @@ static void _set_cs_high(void) {
 	GPIO_WriteBit(_SD_CS_PORT, _SD_CS_PIN, Bit_SET);
 }
 
-static uint8_t _is_miso_high()
-{
-	return GPIO_ReadInputDataBit(_SD_SPI_MISO_PORT, _SD_SPI_MISO_PIN);
-}
+
 
 // SPI functions
 static void _spi_init(void) {
@@ -122,7 +116,7 @@ static uint8_t send_cmd(uint8_t cmd, uint32_t arg) {
 
 	if (cmd & 0x80) {	/* ACMD<n> is the command sequense of CMD55-CMD<n> */
 		cmd &= 0x7F;
-		res = send_cmd(CMD55, 0);
+		res = send_cmd(_CMD55, 0);
 		if (res > 1) return res;
 	}
 
@@ -141,8 +135,8 @@ static uint8_t send_cmd(uint8_t cmd, uint32_t arg) {
 	spi_transfer((uint8_t)(arg >> 8));			/* Argument[15..8] */
 	spi_transfer((uint8_t)arg);				/* Argument[7..0] */
 	n = 0x01;							/* Dummy CRC + Stop */
-	if (cmd == CMD0) n = 0x95;			/* Valid CRC for CMD0(0) */
-	if (cmd == CMD8) n = 0x87;			/* Valid CRC for CMD8(0x1AA) */
+	if (cmd == _CMD0) n = 0x95;			/* Valid CRC for _CMD0(0) */
+	if (cmd == _CMD8) n = 0x87;			/* Valid CRC for CMD8(0x1AA) */
 	spi_transfer(n);
 
 	/* Receive a command response */
@@ -156,7 +150,7 @@ static uint8_t send_cmd(uint8_t cmd, uint32_t arg) {
 
 static UINT _get_proper_sector(UINT sector)
 {
-	return (!(_card_type & CT_BLOCK)) ? sector *= BLOCK_SIZE : sector;	/* Convert to byte address if needed */
+	return (!(_card_type & _CT_BLOCK)) ? sector *= _BLOCK_SIZE : sector;	/* Convert to byte address if needed */
 }
 
 static void _finish_transaction()
@@ -184,24 +178,24 @@ m_disk_io_res_e m_disk_io_init()
 	}
 
 	ty = 0;
-	if (send_cmd(CMD0, 0) == 1) {			/* GO_IDLE_STATE */
-		if (send_cmd(CMD8, 0x1AA) == 1) {	/* SDv2 */
+	if (send_cmd(_CMD0, 0) == 1) {			/* GO_IDLE_STATE */
+		if (send_cmd(_CMD8, 0x1AA) == 1) {	/* SDv2 */
 			for (n = 0; n < 4; n++) ocr[n] = _spi_read_byte();		/* Get trailing return value of R7 resp */
 			if (ocr[2] == 0x01 && ocr[3] == 0xAA) {			/* The card can work at vdd range of 2.7-3.6V */
-				for (tmr = 10000; tmr && send_cmd(ACMD41, 1UL << 30); tmr--) Delay_Us(100);	/* Wait for leaving idle state (ACMD41 with HCS bit) */
-				if (tmr && send_cmd(CMD58, 0) == 0) {		/* Check CCS bit in the OCR */
+				for (tmr = 10000; tmr && send_cmd(_ACMD41, 1UL << 30); tmr--) Delay_Us(100);	/* Wait for leaving idle state (ACMD41 with HCS bit) */
+				if (tmr && send_cmd(_CMD58, 0) == 0) {		/* Check CCS bit in the OCR */
 					for (n = 0; n < 4; n++) ocr[n] = _spi_read_byte();
-					ty = (ocr[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;	/* SDv2 (HC or SC) */
+					ty = (ocr[0] & 0x40) ? _CT_SD2 | _CT_BLOCK : _CT_SD2;	/* SDv2 (HC or SC) */
 				}
 			}
 		} else {							/* SDv1 or MMCv3 */
-			if (send_cmd(ACMD41, 0) <= 1) 	{
-				ty = CT_SD1; cmd = ACMD41;	/* SDv1 */
+			if (send_cmd(_ACMD41, 0) <= 1) 	{
+				ty = _CT_SD1; cmd = _ACMD41;	/* SDv1 */
 			} else {
-				ty = CT_MMC; cmd = CMD1;	/* MMCv3 */
+				ty = _CT_MMC; cmd = _CMD1;	/* MMCv3 */
 			}
 			for (tmr = 10000; tmr && send_cmd(cmd, 0); tmr--) Delay_Us(100);	/* Wait for leaving idle state */
-			if (!tmr || send_cmd(CMD16, BLOCK_SIZE) != 0) {	/* Set R/W block length to BLOCK_SIZE */
+			if (!tmr || send_cmd(_CMD16, _BLOCK_SIZE) != 0) {	/* Set R/W block length to _BLOCK_SIZE */
 				ty = 0;
 			}
 		}
@@ -229,7 +223,7 @@ m_disk_io_res_e m_disk_io_read(uint8_t* buff, UINT sector, UINT offset, UINT cou
 		return M_DISK_IO_RES_OK;
 	}
 
-	if (send_cmd(CMD17, _get_proper_sector(sector)) == 0) {	/* READ_SINGLE_BLOCK */
+	if (send_cmd(_CMD17, _get_proper_sector(sector)) == 0) {	/* READ_SINGLE_BLOCK */
 
 		UINT tries = 40000;	/* Time counter */
 		uint8_t header = 0;
@@ -238,7 +232,7 @@ m_disk_io_res_e m_disk_io_read(uint8_t* buff, UINT sector, UINT offset, UINT cou
 		} while (header == 0xFF && --tries);
 
 		if (header == 0xFE) {	/* A data block arrived */
-			for(int i = 0; i < BLOCK_SIZE; i++){
+			for(int i = 0; i < _BLOCK_SIZE; i++){
 				_buffer[i] = _spi_read_byte();
 			}
 
@@ -280,7 +274,7 @@ m_disk_io_res_e m_disk_io_write(const uint8_t* buff, UINT sector, UINT offset, U
 	}
 
 	//ready to flash
-	if (send_cmd(CMD24, _get_proper_sector(sector)) == 0) {			/* WRITE_SINGLE_BLOCK */
+	if (send_cmd(_CMD24, _get_proper_sector(sector)) == 0) {			/* WRITE_SINGLE_BLOCK */
 
 		Delay_Us(100);
 		spi_transfer(0xFE);		/* Data block header */
