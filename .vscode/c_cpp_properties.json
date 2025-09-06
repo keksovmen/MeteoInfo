@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/User/display/inc"
+                "${workspaceFolder}/User/display/inc",
+                "${workspaceFolder}/Libs/pff3a/source"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

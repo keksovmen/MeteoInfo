@@ -5,7 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "pff.h"
+// #include "pff.h"
+#include "m_disk_io.h"
 
 #include "debug.h"
 
@@ -31,7 +32,7 @@ static display::HalDisplaySSD1315 ssd1315(i2c);
 static display::PartitionBufferedWriter<128> writer(ssd1315);
 static display::FontWriter font(writer);
 
-static FATFS _fs;
+// static FATFS _fs;
 
 
 
@@ -115,12 +116,18 @@ int main (void) {
 
 	writer.flush();
 
+	char buff[4] = {0, 0, 0, 0};
+
+	printf("Init result = %d\r\n", m_disk_io_init());
+	printf("Write result = %d\r\n", m_disk_io_write((const uint8_t*) "123", 15, 200, 3));
+	printf("Write result = %d\r\n", m_disk_io_write((const uint8_t*) "456", 16, 155, 3));
+	printf("Read result = %d, %s\r\n", m_disk_io_read((uint8_t*) buff, 15, 200, 3), buff);
+	printf("Read result = %d, %s\r\n", m_disk_io_read((uint8_t*) buff, 16, 155, 3), buff);
+	/*
 	FRESULT res = pf_mount(&_fs);
 	printf("Mount result = %d\r\n", res);
 
 	res = pf_open("ASDTXT~1.TXT");
-	// res = pf_open("LOG.TXT");
-	// res = pf_open("ASD.TXT");
 	printf("Open result = %d\r\n", res);
 
 	UINT _;
@@ -144,7 +151,7 @@ int main (void) {
 			break;
 		}
 	}
-
+	*/
 
     while (1) {
         // printf ("Cycle\r\n");
