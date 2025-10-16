@@ -40,42 +40,14 @@ static display::FontWriter font(writer);
 
 
 
-// void USARTx_CFG (void) {
-//     GPIO_InitTypeDef GPIO_InitStructure = {0};
-//     USART_InitTypeDef USART_InitStructure = {0};
-
-//     RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOD | RCC_APB2Periph_USART1, ENABLE);
-
-//     /* USART1 TX-->D.5   RX-->D.6 */
-//     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
-//     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_30MHz;
-//     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-//     GPIO_Init (GPIOD, &GPIO_InitStructure);
-//     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
-//     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-//     GPIO_Init (GPIOD, &GPIO_InitStructure);
-
-//     USART_InitStructure.USART_BaudRate = 115200;
-//     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-//     USART_InitStructure.USART_StopBits = USART_StopBits_1;
-//     USART_InitStructure.USART_Parity = USART_Parity_No;
-//     USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-//     USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
-
-//     USART_Init (USART1, &USART_InitStructure);
-//     USART_Cmd (USART1, ENABLE);
-// }
-
-
-
 int check_aht20(void)
 {
 	Delay_Ms(100);
 
-	aht20_data_t sensor_data;
-	
+	periph::Aht20 aht(i2c);
+
 	// Initialize sensor
-	if (!aht20_init(&i2c)) {
+	if (!aht.init()) {
 		printf("AHT20 initialization failed!\r\n");
 		return -1;
 	}
@@ -83,12 +55,14 @@ int check_aht20(void)
 	printf("AHT20 initialized successfully\r\n");
 	
 	// Read sensor data
-	if (aht20_read_temperature_humidity(&i2c, &sensor_data)) {
-		printf("Temperature: %d.%d °C\r\n", (int) sensor_data.temperature, (int) ((sensor_data.temperature - (int) sensor_data.temperature) * 100));
-		printf("Humidity: %d.%d %%\r\n", (int) sensor_data.humidity, (int) ((sensor_data.humidity - (int) sensor_data.humidity) * 100));
-	} else {
-		printf("Failed to read sensor data\r\n");
-	}
+	std::pair<float, float> data = aht.readTempAndHum();
+
+	// if (aht20_read_temperature_humidity(&i2c, &sensor_data)) {
+	printf("Temperature: %d.%d °C\r\n", (int) data.first, (int) ((data.first - (int) data.first) * 100));
+	printf("Humidity: %d.%d %%\r\n", (int) data.second, (int) ((data.second - (int) data.second) * 100));
+	// } else {
+	// 	printf("Failed to read sensor data\r\n");
+	// }
 	
 	return 0;
 }
@@ -110,7 +84,7 @@ int main (void) {
 
 	i2c.init(100000);
 
-	// check_aht20();
+	check_aht20();
 
 	
 	ssd1315.init();

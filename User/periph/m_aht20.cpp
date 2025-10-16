@@ -4,93 +4,101 @@
 
 
 
-bool aht20_init(periph::I2C_Hal *hal)
+#define _AHT20_I2C_ADDRESS          0x38
+
+// AHT20 Commands
+#define _AHT20_CMD_INIT             0xBE
+#define _AHT20_CMD_READ_STATUS      0x71
+#define _AHT20_CMD_TRIGGER_MEAS     0xAC
+#define _AHT20_CMD_SOFT_RESET       0xBA
+
+// Status Register Bits
+#define _AHT20_STATUS_BUSY          (1 << 7)
+#define _AHT20_STATUS_CALIBRATED    (1 << 3)
+
+// Measurement Constants
+#define _AHT20_MEASURE_DELAY_MS     80
+
+
+
+using namespace periph;
+
+
+
+Aht20::Aht20(I2C_Hal& hal)
+	: _hal(hal)
 {
-	if (hal == NULL) {
-		return false;
-	}
-	
-	
+
+}
+
+bool Aht20::init()
+{
 	// Send initialization command
-	// uint8_t init_cmd[3] = {AHT20_CMD_INIT, 0x08, 0x00};
-	hal->startSignal();
-	hal->writeRequest(AHT20_I2C_ADDRESS);
-	hal->writeData(AHT20_CMD_INIT);
-	hal->writeData(0x08);
-	hal->writeData(0x00);
-	hal->stopSignal();
+	_hal.startSignal();
+	_hal.writeRequest(_AHT20_I2C_ADDRESS);
+	_hal.writeData(_AHT20_CMD_INIT);
+	//args
+	_hal.writeData(0x08);
+	_hal.writeData(0x00);
+	_hal.stopSignal();
 	
 	Delay_Ms(10);
 	
 	// Check if sensor is calibrated
-	return aht20_is_calibrated(hal);
+	return isCalibrated();
 }
 
-bool aht20_soft_reset(periph::I2C_Hal *hal)
+void Aht20::reset()
 {
-	if (hal == NULL) return false;
-	
-	hal->startSignal();
-	hal->writeRequest(AHT20_I2C_ADDRESS);
-	hal->writeData(AHT20_CMD_SOFT_RESET);
-	hal->stopSignal();
+	_hal.startSignal();
+	_hal.writeRequest(_AHT20_I2C_ADDRESS);
+	_hal.writeData(_AHT20_CMD_SOFT_RESET);
+	_hal.stopSignal();
 	
 	Delay_Ms(20);
-
-	return true;
 }
 
-bool aht20_is_calibrated(periph::I2C_Hal *hal)
+bool Aht20::isCalibrated()
 {
-	if (hal == NULL) return false;
-	
-	uint8_t status = 0;
+	_hal.startSignal();
+	_hal.writeRequest(_AHT20_I2C_ADDRESS);
+	_hal.writeData(_AHT20_CMD_READ_STATUS);
+	_hal.stopSignal();
 
-	hal->startSignal();
-	hal->writeRequest(AHT20_I2C_ADDRESS);
-	hal->writeData(0x71);
-	hal->stopSignal();
-
-	hal->startSignal();
-	hal->readRequest(AHT20_I2C_ADDRESS);
-	status = hal->readData();
-	hal->stopSignal();
+	_hal.startSignal();
+	_hal.readRequest(_AHT20_I2C_ADDRESS);
+	uint8_t status = _hal.readData();
+	_hal.stopSignal();
 	
-	return (status & AHT20_STATUS_CALIBRATED) != 0;
+	return (status & _AHT20_STATUS_CALIBRATED) != 0;
 }
 
-bool aht20_read_temperature_humidity(periph::I2C_Hal *hal, aht20_data_t *data)
+std::pair<float, float> Aht20::readTempAndHum()
 {
-	if (hal == NULL || data == NULL) return false;
-	
-	// Trigger measurement
-	// uint8_t trigger_cmd[3] = {AHT20_CMD_TRIGGER_MEAS, 0x33, 0x00};
-
-	hal->startSignal();
-	hal->writeRequest(AHT20_I2C_ADDRESS);
-	hal->writeData(AHT20_CMD_TRIGGER_MEAS);
-	hal->writeData(0x33);
-	hal->writeData(0x00);
-	hal->stopSignal();
+	_hal.startSignal();
+	_hal.writeRequest(_AHT20_I2C_ADDRESS);
+	_hal.writeData(_AHT20_CMD_TRIGGER_MEAS);
+	_hal.writeData(0x33);
+	_hal.writeData(0x00);
+	_hal.stopSignal();
 	
 	// Wait for measurement to complete
-	Delay_Ms(AHT20_MEASURE_DELAY_MS);
+	Delay_Ms(_AHT20_MEASURE_DELAY_MS);
 	
 	// Read 6 bytes of data (status + humidity + temperature + CRC)
-	hal->startSignal();
-	hal->readRequest(AHT20_I2C_ADDRESS);
+	_hal.startSignal();
+	_hal.readRequest(_AHT20_I2C_ADDRESS);
 
 	uint8_t raw_data[6];
 	for(int i = 0; i < 6; i++){
-		raw_data[i] = hal->readData();
+		raw_data[i] = _hal.readData();
 	}
-	hal->stopSignal();
+	_hal.stopSignal();
 
-	// raw_data[0] = hal->readData();
 	
 	// Check if measurement is complete
-	if (raw_data[0] & AHT20_STATUS_BUSY) {
-		return false; // Measurement still in progress
+	if (raw_data[0] & _AHT20_STATUS_BUSY) {
+		return {}; // Measurement still in progress
 	}
 	
 	// Extract humidity (20 bits)
@@ -103,9 +111,6 @@ bool aht20_read_temperature_humidity(periph::I2C_Hal *hal, aht20_data_t *data)
 							  ((uint32_t)raw_data[4] << 8) |
 							  raw_data[5];
 	
-	// Convert to physical values
-	data->humidity = (float)humidity_raw * 100.0f / 1048576.0f; // 2^20 = 1048576
-	data->temperature = (float)temperature_raw * 200.0f / 1048576.0f - 50.0f;
-	
-	return true;
+	return {(float)temperature_raw * 200.0f / 1048576.0f - 50.0f,
+			(float)humidity_raw * 100.0f / 1048576.0f};
 }

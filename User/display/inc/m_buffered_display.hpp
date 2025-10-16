@@ -50,7 +50,7 @@ namespace display
 			bool addDrawAction(DrawAction&& action);
 		
 		private:
-			std::array<DrawAction, 10> _actions;
+			std::array<DrawAction, 10> _actions {};
 
 			int _length = 0;
 			int _currentX = 0;
