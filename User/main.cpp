@@ -9,6 +9,8 @@
 #include "m_disk_io.h"
 #include "m_fs.h"
 
+#include "m_aht20.hpp"
+
 #include "debug.h"
 
 #include "m_i2c.hpp"
@@ -26,6 +28,7 @@ static periph::I2C_Peripheral i2c{
 	&periph::I2C_ReadRequest,
 	&periph::I2C_WriteRequest,
 	&periph::I2C_WriteByte,
+	&periph::I2C_ReadByte,
 	&periph::I2C_StopSequence
 };
 
@@ -63,6 +66,35 @@ static display::FontWriter font(writer);
 //     USART_Cmd (USART1, ENABLE);
 // }
 
+
+
+int check_aht20(void)
+{
+	Delay_Ms(100);
+
+	aht20_data_t sensor_data;
+	
+	// Initialize sensor
+	if (!aht20_init(&i2c)) {
+		printf("AHT20 initialization failed!\r\n");
+		return -1;
+	}
+	
+	printf("AHT20 initialized successfully\r\n");
+	
+	// Read sensor data
+	if (aht20_read_temperature_humidity(&i2c, &sensor_data)) {
+		printf("Temperature: %d.%d °C\r\n", (int) sensor_data.temperature, (int) ((sensor_data.temperature - (int) sensor_data.temperature) * 100));
+		printf("Humidity: %d.%d %%\r\n", (int) sensor_data.humidity, (int) ((sensor_data.humidity - (int) sensor_data.humidity) * 100));
+	} else {
+		printf("Failed to read sensor data\r\n");
+	}
+	
+	return 0;
+}
+
+
+
 int main (void) {
     SystemCoreClockUpdate();
     Delay_Init();
@@ -77,6 +109,9 @@ int main (void) {
     // USARTx_CFG();
 
 	i2c.init(100000);
+
+	// check_aht20();
+
 	
 	ssd1315.init();
 	ssd1315.clearScreen();
@@ -163,6 +198,7 @@ int main (void) {
 		}
 	}
 	*/
+
 
     while (1) {
         // printf ("Cycle\r\n");

@@ -63,7 +63,7 @@ void periph::I2C_ReadRequest(int address)
 {
 	//TODO: fix direction
 	I2C_Send7bitAddress (I2C1, address, I2C_Direction_Receiver);
-	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
+	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED))
 		;
 }
 
@@ -72,4 +72,13 @@ void periph::I2C_WriteByte(uint8_t data)
 	I2C_SendData (I2C1, data);
 	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
 		;
+}
+
+uint8_t periph::I2C_ReadByte()
+{
+	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_BYTE_RECEIVED))
+		;
+	uint8_t result = I2C_ReceiveData (I2C1);
+
+	return result;
 }

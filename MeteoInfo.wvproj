@@ -144,7 +144,8 @@
 							"${project}/Core",
 							"${project}/User",
 							"${project}/Peripheral/inc",
-							"${project}/Libs/m_fs"
+							"${project}/Libs/m_fs",
+							"${project}/User/periph/inc"
 						],
 						"include_system_paths": [],
 						"include_files": []

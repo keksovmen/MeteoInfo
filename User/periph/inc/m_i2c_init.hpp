@@ -14,4 +14,5 @@ namespace periph
 	void I2C_WriteRequest(int address);
 	void I2C_ReadRequest(int address);
 	void I2C_WriteByte(uint8_t data);
+	uint8_t I2C_ReadByte();
 }

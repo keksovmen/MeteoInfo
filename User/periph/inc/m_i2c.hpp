@@ -19,7 +19,8 @@ namespace periph
 			using WriteStartCb = void(*)();
 			using WriteReadRequestCb = void(*)(int address);
 			using WriteWriteRequestCb = void(*)(int address);
-			using WriteWriteDataCb = void(*)(uint8_t data);
+			using WriteDataCb = void(*)(uint8_t data);
+			using ReadDataCb = uint8_t(*)();
 			using WriteStopCb = void(*)();
 
 
@@ -28,7 +29,8 @@ namespace periph
 				WriteStartCb startCb,
 				WriteReadRequestCb readRequestCb,
 				WriteWriteRequestCb writeRequestCb,
-				WriteWriteDataCb writeDataCb,
+				WriteDataCb writeDataCb,
+				ReadDataCb readDataCb,
 				WriteStopCb stopCb)
 					:
 					_initCb(initCb),
@@ -36,6 +38,7 @@ namespace periph
 					_readRequestCb(readRequestCb),
 					_writeRequestCb(writeRequestCb),
 					_writeDataCb(writeDataCb),
+					_readDataCb(readDataCb),
 					_stopCb(stopCb)
 				{
 				}
@@ -48,6 +51,7 @@ namespace periph
 			virtual void readRequest(int address) override { std::invoke(_readRequestCb, (address << 1) | 1); };
 			virtual void writeRequest(int address) override { std::invoke(_writeRequestCb, address << 1); };
 			virtual void writeData(int data) override { std::invoke(_writeDataCb, data); };
+			virtual uint8_t readData() override { return std::invoke(_readDataCb); };
 			
 
 		private:
@@ -55,7 +59,8 @@ namespace periph
 			WriteStartCb _startCb;
 			WriteReadRequestCb _readRequestCb;
 			WriteWriteRequestCb _writeRequestCb;
-			WriteWriteDataCb _writeDataCb;
+			WriteDataCb _writeDataCb;
+			ReadDataCb _readDataCb;
 			WriteStopCb _stopCb;
 
 	};

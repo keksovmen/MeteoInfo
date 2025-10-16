@@ -17,5 +17,6 @@ namespace periph
 			virtual void readRequest(int address) = 0;
 			virtual void writeRequest(int address) = 0;
 			virtual void writeData(int data) = 0;
+			virtual uint8_t readData() = 0;
 	};
 }
