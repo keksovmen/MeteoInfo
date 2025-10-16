@@ -61,7 +61,7 @@
 					"other_target_flags": ""
 				},
 				"optimization": {
-					"level": "debug",
+					"level": "size",
 					"message_length": true,
 					"char_is_signed": true,
 					"function_sections": true,

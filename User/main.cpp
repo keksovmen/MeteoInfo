@@ -14,7 +14,7 @@
 #include "debug.h"
 
 #include "m_i2c.hpp"
-#include "m_i2c_init.hpp"
+#include "m_i2c_impl.hpp"
 #include "m_hal_ssd1315.hpp"
 #include "m_buffered_display.hpp"
 #include "m_font_writer.hpp"
@@ -23,28 +23,28 @@
 
 
 static periph::I2C_Peripheral i2c{
-	&periph::I2C_Init,
-	&periph::I2C_StartSequence,
-	&periph::I2C_ReadRequest,
-	&periph::I2C_WriteRequest,
-	&periph::I2C_WriteByte,
-	&periph::I2C_ReadByte,
-	&periph::I2C_StopSequence
+	&periph::i2c_init,
+	&periph::i2c_start_sequence,
+	&periph::i2c_read_request,
+	&periph::i2c_write_request,
+	&periph::i2c_write_byte,
+	&periph::i2c_read_byte,
+	&periph::i2c_stop_sequence,
+	&Delay_Ms
 };
 
 static display::HalDisplaySSD1315 ssd1315(i2c);
 static display::PartitionBufferedWriter<128> writer(ssd1315);
 static display::FontWriter font(writer);
+static periph::Aht20 aht(i2c);
 
 // static FATFS _fs;
 
 
 
-int check_aht20(void)
+static int _test_aht20(void)
 {
 	Delay_Ms(100);
-
-	periph::Aht20 aht(i2c);
 
 	// Initialize sensor
 	if (!aht.init()) {
@@ -84,43 +84,55 @@ int main (void) {
 
 	i2c.init(100000);
 
-	check_aht20();
+	_test_aht20();
 
 	
 	ssd1315.init();
 	ssd1315.clearScreen();
 
 	writer.addDrawAction([](auto& w){
-		w.drawRectangle(0, 16, 16, 8);
-		w.setPixel(127, 0, true);
-		w.setPixel(126, 1, true);
-		w.setPixel(125, 2, true);
-		w.setPixel(124, 3, true);
-		w.setPixel(123, 4, true);
-		w.setPixel(122, 5, true);
-		w.setPixel(121, 6, true);
-		w.setPixel(120, 7, true);
+		// w.drawRectangle(0, 16, 16, 8);
+		// w.setPixel(127, 0, true);
+		// w.setPixel(126, 1, true);
+		// w.setPixel(125, 2, true);
+		// w.setPixel(124, 3, true);
+		// w.setPixel(123, 4, true);
+		// w.setPixel(122, 5, true);
+		// w.setPixel(121, 6, true);
+		// w.setPixel(120, 7, true);
 
-		w.setPixel(127, 7, true);
-		w.setPixel(126, 6, true);
-		w.setPixel(125, 5, true);
-		w.setPixel(124, 4, true);
-		w.setPixel(123, 3, true);
-		w.setPixel(122, 2, true);
-		w.setPixel(121, 1, true);
-		w.setPixel(120, 0, true);
+		// w.setPixel(127, 7, true);
+		// w.setPixel(126, 6, true);
+		// w.setPixel(125, 5, true);
+		// w.setPixel(124, 4, true);
+		// w.setPixel(123, 3, true);
+		// w.setPixel(122, 2, true);
+		// w.setPixel(121, 1, true);
+		// w.setPixel(120, 0, true);
 
-		w.drawLine(120, 8, 127, 15);
-		w.drawLine(120, 15, 127, 8);
+		// w.drawLine(120, 8, 127, 15);
+		// w.drawLine(120, 15, 127, 8);
+
+		// font.changeSize<display::FontWriter::FontSize::MEDIUM>();
+		// font.drawStr(0, 0, "%+-_*!@#");
+
+		// font.changeSize<display::FontWriter::FontSize::SMALL>();
+		// font.drawStr(0, 32, "+ 0123456789 -");
+
+		// font.changeSize<display::FontWriter::FontSize::MEDIUM>();
+		// font.drawStr(64, 48, "ABCDEZ");
+
+		
+		auto data = aht.readTempAndHum();
+
+		char buff[32] = {0};
+		sprintf(buff, "TEMP: %d.%d C", (int) data.first, (int) ((data.first - (int) data.first) * 100));
 
 		font.changeSize<display::FontWriter::FontSize::MEDIUM>();
-		font.drawStr(0, 0, "%+-_*!@#");
+		font.drawStr(0, 0, buff);
 
-		font.changeSize<display::FontWriter::FontSize::SMALL>();
-		font.drawStr(0, 32, "+ 0123456789 -");
-
-		font.changeSize<display::FontWriter::FontSize::MEDIUM>();
-		font.drawStr(64, 48, "ABCDEZ");
+		sprintf(buff, "HUM: %d.%d %%", (int) data.second, (int) ((data.second - (int) data.second) * 100));
+		font.drawStr(0, 16, buff);
 	});
 
 

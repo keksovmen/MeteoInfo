@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 
-#include "m_hal_i2c.hpp"
+#include "m_i2c_hal.hpp"
 
 
 
@@ -22,6 +22,7 @@ namespace periph
 			using WriteDataCb = void(*)(uint8_t data);
 			using ReadDataCb = uint8_t(*)();
 			using WriteStopCb = void(*)();
+			using DelayMsCb = void(*)(uint32_t ms);
 
 
 
@@ -31,7 +32,8 @@ namespace periph
 				WriteWriteRequestCb writeRequestCb,
 				WriteDataCb writeDataCb,
 				ReadDataCb readDataCb,
-				WriteStopCb stopCb)
+				WriteStopCb stopCb,
+				DelayMsCb delayCb)
 					:
 					_initCb(initCb),
 					_startCb(startCb),
@@ -39,7 +41,8 @@ namespace periph
 					_writeRequestCb(writeRequestCb),
 					_writeDataCb(writeDataCb),
 					_readDataCb(readDataCb),
-					_stopCb(stopCb)
+					_stopCb(stopCb),
+					_delayCb(delayCb)
 				{
 				}
 
@@ -52,6 +55,7 @@ namespace periph
 			virtual void writeRequest(int address) override { std::invoke(_writeRequestCb, address << 1); };
 			virtual void writeData(int data) override { std::invoke(_writeDataCb, data); };
 			virtual uint8_t readData() override { return std::invoke(_readDataCb); };
+			virtual void delayMs(uint32_t ms) override { std::invoke(_delayCb, ms); };
 			
 
 		private:
@@ -62,6 +66,7 @@ namespace periph
 			WriteDataCb _writeDataCb;
 			ReadDataCb _readDataCb;
 			WriteStopCb _stopCb;
+			DelayMsCb _delayCb;
 
 	};
 }

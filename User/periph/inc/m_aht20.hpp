@@ -4,13 +4,13 @@
 
 #include <utility>
 
-#include "m_hal_i2c.hpp"
+#include "m_i2c_hal.hpp"
 
 
 
 namespace periph
 {
-	class Aht20 final
+	class Aht20
 	{
 		public:
 			Aht20(I2C_Hal& hal);

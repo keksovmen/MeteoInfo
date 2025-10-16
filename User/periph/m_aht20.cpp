@@ -1,7 +1,5 @@
 #include "m_aht20.hpp"
 
-#include "debug.h"
-
 
 
 #define _AHT20_I2C_ADDRESS          0x38
@@ -42,7 +40,7 @@ bool Aht20::init()
 	_hal.writeData(0x00);
 	_hal.stopSignal();
 	
-	Delay_Ms(10);
+	_hal.delayMs(10);
 	
 	// Check if sensor is calibrated
 	return isCalibrated();
@@ -55,7 +53,7 @@ void Aht20::reset()
 	_hal.writeData(_AHT20_CMD_SOFT_RESET);
 	_hal.stopSignal();
 	
-	Delay_Ms(20);
+	_hal.delayMs(20);
 }
 
 bool Aht20::isCalibrated()
@@ -83,7 +81,7 @@ std::pair<float, float> Aht20::readTempAndHum()
 	_hal.stopSignal();
 	
 	// Wait for measurement to complete
-	Delay_Ms(_AHT20_MEASURE_DELAY_MS);
+	_hal.delayMs(_AHT20_MEASURE_DELAY_MS);
 	
 	// Read 6 bytes of data (status + humidity + temperature + CRC)
 	_hal.startSignal();

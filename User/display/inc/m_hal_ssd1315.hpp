@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include "m_hal_display.hpp"
-#include "m_hal_i2c.hpp"
+#include "m_i2c_hal.hpp"
 
 
 
