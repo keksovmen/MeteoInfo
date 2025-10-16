@@ -7,6 +7,7 @@
 
 // #include "pff.h"
 #include "m_disk_io.h"
+#include "m_fs.h"
 
 #include "debug.h"
 
@@ -116,13 +117,23 @@ int main (void) {
 
 	writer.flush();
 
-	char buff[4] = {0, 0, 0, 0};
+	char buff[8] = {0, 0, 0, 0};
 
-	printf("Init result = %d\r\n", m_disk_io_init());
-	printf("Write result = %d\r\n", m_disk_io_write((const uint8_t*) "123", 15, 200, 3));
-	printf("Write result = %d\r\n", m_disk_io_write((const uint8_t*) "456", 16, 155, 3));
-	printf("Read result = %d, %s\r\n", m_disk_io_read((uint8_t*) buff, 15, 200, 3), buff);
-	printf("Read result = %d, %s\r\n", m_disk_io_read((uint8_t*) buff, 16, 155, 3), buff);
+	m_fs_t fs;
+	printf("Init result = %d\r\n", m_fs_init(&fs));
+
+	m_fs_file_t root;
+	printf("Open result = %d, size = %d\r\n", m_fs_open(NULL, M_FS_OPEN_MODE_WRITE, &root), root.sizeB);
+	printf("Write result = %d, size = %d\r\n", m_fs_write(&root, (const uint8_t*) "AHAHAHA", 8), root.sizeB);
+	printf("Open result = %d, size = %d\r\n", m_fs_open(NULL, M_FS_OPEN_MODE_WRITE, &root), root.sizeB);
+	printf("Read result = %d\t%s\r\n", m_fs_read(&root, (uint8_t*) buff, 8), buff);
+
+
+	// printf("Init result = %d\r\n", m_disk_io_init());
+	// printf("Write result = %d\r\n", m_disk_io_write((const uint8_t*) "123", 15, 200, 3));
+	// printf("Write result = %d\r\n", m_disk_io_write((const uint8_t*) "456", 16, 155, 3));
+	// printf("Read result = %d, %s\r\n", m_disk_io_read((uint8_t*) buff, 15, 200, 3), buff);
+	// printf("Read result = %d, %s\r\n", m_disk_io_read((uint8_t*) buff, 16, 155, 3), buff);
 	/*
 	FRESULT res = pf_mount(&_fs);
 	printf("Mount result = %d\r\n", res);
