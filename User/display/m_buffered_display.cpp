@@ -94,6 +94,23 @@ void BufferedWriter<N>::flush()
 	_disp.drawRegion(0, 0, _disp.getWidth(), _disp.getHeight(), _buffer);
 }
 
+template<int N>
+bool BufferedWriter<N>::addDrawAction(DisplayWriter::DrawAction&& action)
+{
+	return false;
+}
+
+template<int N>
+int BufferedWriter<N>::getWidth() const
+{
+	return _disp.getWidth();
+}
+
+template<int N>
+int BufferedWriter<N>::getHeight() const
+{
+	return _disp.getHeight();
+}
 
 
 
@@ -125,7 +142,7 @@ void PartitionBufferedWriter<N>::flush()
 }
 
 template<int N>
-bool PartitionBufferedWriter<N>::addDrawAction(DrawAction&& action)
+bool PartitionBufferedWriter<N>::addDrawAction(DisplayWriter::DrawAction&& action)
 {
 	_actions[_length] = std::move(action);
 	_length++;
@@ -160,6 +177,6 @@ void PartitionBufferedWriter<N>::_applyDrawActions()
 {
 	for (int i = 0; i < _length; i++)
 	{
-		std::invoke(_actions[i], *this);
+		std::invoke(_actions[i]);
 	}
 }

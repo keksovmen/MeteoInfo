@@ -3,6 +3,7 @@
 
 
 #include <stdint.h>
+#include <functional>
 
 
 
@@ -11,6 +12,10 @@ namespace display
 	class DisplayWriter
 	{
 		public:
+			using DrawAction = std::function<void()>;
+
+
+
 			virtual ~DisplayWriter() = default;
 
 
@@ -20,5 +25,10 @@ namespace display
 			virtual void drawRectangle(int x, int y, int width, int height) = 0;
 			virtual void drawBitmap(int x, int y, int width, int height, const uint8_t* data) = 0;
 			virtual void flush() = 0;
+
+			virtual bool addDrawAction(DrawAction&& action) = 0;
+
+			virtual int getWidth() const = 0;
+			virtual int getHeight() const = 0;
 	};
 }

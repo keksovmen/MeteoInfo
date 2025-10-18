@@ -18,6 +18,7 @@
 #include "m_hal_ssd1315.hpp"
 #include "m_buffered_display.hpp"
 #include "m_font_writer.hpp"
+#include "m_graph_drawer.hpp"
 
 
 
@@ -36,6 +37,7 @@ static periph::I2C_Peripheral i2c{
 static display::HalDisplaySSD1315 ssd1315(i2c);
 static display::PartitionBufferedWriter<128> writer(ssd1315);
 static display::FontWriter font(writer);
+static display::GraphDrawer graph(writer, font);
 static periph::Aht20 aht(i2c);
 
 // static FATFS _fs;
@@ -90,7 +92,7 @@ int main (void) {
 	ssd1315.init();
 	ssd1315.clearScreen();
 
-	writer.addDrawAction([](auto& w){
+	// writer.addDrawAction([](){
 		// w.drawRectangle(0, 16, 16, 8);
 		// w.setPixel(127, 0, true);
 		// w.setPixel(126, 1, true);
@@ -123,31 +125,34 @@ int main (void) {
 		// font.drawStr(64, 48, "ABCDEZ");
 
 		
-		auto data = aht.readTempAndHum();
+	// 	auto data = aht.readTempAndHum();
 
-		char buff[32] = {0};
-		sprintf(buff, "TEMP: %d.%d C", (int) data.first, (int) ((data.first - (int) data.first) * 100));
+	// 	char buff[32] = {0};
+	// 	sprintf(buff, "TEMP: %d.%d C", (int) data.first, (int) ((data.first - (int) data.first) * 100));
 
-		font.changeSize<display::FontWriter::FontSize::MEDIUM>();
-		font.drawStr(0, 0, buff);
+	// 	font.changeSize<display::FontWriter::FontSize::MEDIUM>();
+	// 	font.drawStr(0, 0, buff);
 
-		sprintf(buff, "HUM: %d.%d %%", (int) data.second, (int) ((data.second - (int) data.second) * 100));
-		font.drawStr(0, 16, buff);
-	});
+	// 	sprintf(buff, "HUM: %d.%d %%", (int) data.second, (int) ((data.second - (int) data.second) * 100));
+	// 	font.drawStr(0, 16, buff);
+	// });
 
 
 	writer.flush();
 
+	float dataGraph[] = {5.0f, 3.0f, 1.0f, 4.0f, 6.0f, -1.0f};
+	graph.drawGraph(dataGraph);
+
 	char buff[8] = {0, 0, 0, 0};
 
-	m_fs_t fs;
-	printf("Init result = %d\r\n", m_fs_init(&fs));
+	// m_fs_t fs;
+	// printf("Init result = %d\r\n", m_fs_init(&fs));
 
-	m_fs_file_t root;
-	printf("Open result = %d, size = %d\r\n", m_fs_open(NULL, M_FS_OPEN_MODE_WRITE, &root), root.sizeB);
-	printf("Write result = %d, size = %d\r\n", m_fs_write(&root, (const uint8_t*) "AHAHAHA", 8), root.sizeB);
-	printf("Open result = %d, size = %d\r\n", m_fs_open(NULL, M_FS_OPEN_MODE_WRITE, &root), root.sizeB);
-	printf("Read result = %d\t%s\r\n", m_fs_read(&root, (uint8_t*) buff, 8), buff);
+	// m_fs_file_t root;
+	// printf("Open result = %d, size = %d\r\n", m_fs_open(NULL, M_FS_OPEN_MODE_WRITE, &root), root.sizeB);
+	// printf("Write result = %d, size = %d\r\n", m_fs_write(&root, (const uint8_t*) "AHAHAHA", 8), root.sizeB);
+	// printf("Open result = %d, size = %d\r\n", m_fs_open(NULL, M_FS_OPEN_MODE_WRITE, &root), root.sizeB);
+	// printf("Read result = %d\t%s\r\n", m_fs_read(&root, (uint8_t*) buff, 8), buff);
 
 
 	// printf("Init result = %d\r\n", m_disk_io_init());

@@ -25,6 +25,12 @@ namespace display
 			virtual void drawRectangle(int x, int y, int width, int height) override;
 			virtual void drawBitmap(int x, int y, int width, int height, const uint8_t* data) override;
 			virtual void flush() override;
+
+			virtual bool addDrawAction(DisplayWriter::DrawAction&& action) override;
+
+			virtual int getWidth() const override;
+			virtual int getHeight() const override;
+
 		
 		protected:
 			HalDisplayI& _disp;
@@ -33,12 +39,13 @@ namespace display
 
 
 
-
 	template<int N>
 	class PartitionBufferedWriter : public BufferedWriter<N>
 	{
 		public:
-			using DrawAction = std::function<void (PartitionBufferedWriter&)>;
+			// using DrawAction = std::function<void(PartitionBufferedWriter&)>;
+
+
 
 			PartitionBufferedWriter(HalDisplayI& disp);
 
@@ -47,10 +54,10 @@ namespace display
 			virtual void setPixel(int x, int y, bool state) override;
 			virtual void flush() override;
 
-			bool addDrawAction(DrawAction&& action);
+			virtual bool addDrawAction(DisplayWriter::DrawAction&& action) override;
 		
 		private:
-			std::array<DrawAction, 10> _actions {};
+			std::array<DisplayWriter::DrawAction, 10> _actions {};
 
 			int _length = 0;
 			int _currentX = 0;
