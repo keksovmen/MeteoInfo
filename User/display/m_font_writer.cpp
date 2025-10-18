@@ -12,7 +12,7 @@ extern const uint8_t glyphs_medium[];
 
 
 const std::array<FontWriter::FontEntry, static_cast<int>(FontWriter::FontSize::COUNT)> FontWriter::_fonts = {
-	{{8, 8, 5, ' ', '9', glyphs_small},
+	{{8, 8, 6, ' ', '9', glyphs_small},
 	{8, 16, 8, ' ', 'Z', glyphs_medium},
 	}
 };
