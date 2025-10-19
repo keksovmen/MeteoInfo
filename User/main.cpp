@@ -215,7 +215,7 @@ int main (void) {
 
 		// std::for_each(_dataEntries.begin(), _dataEntries.end(), [](auto& e){printf("%d.%d\r\n", (int) e.first, (int) ((e.first - (int) e.first) * 100));});
 		// std::for_each(tmp.begin(), tmp.end(), [](auto& e){printf("%d.%d\r\n", (int) e, (int) ((e - (int) e) * 100));});
-
+		graph.setLabel((_count < 5) ? "TEMPERATURE C" : "HUMIDITY %");
 		graph.drawGraph({tmp.begin(), _TEST_STORAGE_SIZE});
 
 		_count = (_count + 1) % 10;

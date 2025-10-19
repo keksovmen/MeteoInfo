@@ -39,6 +39,19 @@ namespace display
 
 			}
 
+			template<FontSize S>
+			constexpr int calcLength(std::string_view str) const
+			{
+				return str.length() * _fonts[static_cast<int>(S)].spaceSize;
+			}
+
+			template<FontSize S>
+			constexpr int getFontHeight() const
+			{
+				return _fonts[static_cast<int>(S)].height;
+			}
+			
+
 
 		private:
 			struct FontEntry
