@@ -32,10 +32,11 @@ namespace display
 					const int offset = 4;
 					const int blockSize = 6;
 					const int halfBlockSize = blockSize / 2;
-					const int entryOffset = 20;
+					const int entryOffset = 16;
 					const int workingHeight = _writer.getHeight() - offset * 2;
 					const int startY = 4;
 					const int startX = _writer.getWidth() - offset;
+					const int MAX_SIZE = 6;
 					// int workingWidth = _writer.getWidth() - offset * 2;
 
 					// Y axis line
@@ -45,8 +46,8 @@ namespace display
 					_writer.drawLine(offset, _writer.getHeight() - offset, _writer.getWidth() - offset, _writer.getHeight() - offset);
 
 					//need min and max values to calculate offsets
-					float max = *std::max_element(data.begin(), data.end());
-					float min = *std::min_element(data.begin(), data.end());
+					float max = *std::max_element(data.begin(), data.begin() + std::min<int>(data.size(), MAX_SIZE));
+					float min = *std::min_element(data.begin(), data.begin() + std::min<int>(data.size(), MAX_SIZE));
 					float middle = (max + min) / 2;
 					float range = max - min;
 
@@ -67,7 +68,7 @@ namespace display
 					float xPrev = 0.0f;
 					float yPrev = 0.0f;
 
-					for(int i = 0; i < data.size(); i++){
+					for(int i = 0; i < std::min<int>(data.size(), MAX_SIZE); i++){
 						float yPosition = (workingHeight - ((data[i] - min) / range) * workingHeight) + startY;
 						float xPosition = startX - entryOffset * i;
 

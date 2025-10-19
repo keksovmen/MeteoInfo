@@ -22,6 +22,9 @@
 
 
 
+#define _TEST_STORAGE_SIZE 10
+
+
 
 static periph::I2C_Peripheral i2c{
 	&periph::i2c_init,
@@ -39,6 +42,8 @@ static display::PartitionBufferedWriter<128> writer(ssd1315);
 static display::FontWriter font(writer);
 static display::GraphDrawer graph(writer, font);
 static periph::Aht20 aht(i2c);
+static std::array<std::pair<float, float>, _TEST_STORAGE_SIZE> _dataEntries;
+static int _count = 0;
 
 // static FATFS _fs;
 
@@ -138,12 +143,12 @@ int main (void) {
 	// });
 
 
-	writer.flush();
+	// writer.flush();
 
-	float dataGraph[] = {5.0f, 3.0f, 1.0f, 4.0f, 6.0f, -1.0f};
-	graph.drawGraph(dataGraph);
+	// float dataGraph[] = {5.0f, 3.0f, 1.0f, 4.0f, 6.0f, -1.0f};
+	// graph.drawGraph(dataGraph);
 
-	char buff[8] = {0, 0, 0, 0};
+	// char buff[8] = {0, 0, 0, 0};
 
 	// m_fs_t fs;
 	// printf("Init result = %d\r\n", m_fs_init(&fs));
@@ -193,5 +198,28 @@ int main (void) {
 
     while (1) {
         // printf ("Cycle\r\n");
+		// std::copy(_dataEntries.begin(), _dataEntries.end() - 1, &_dataEntries[1]);
+		std::copy_backward(_dataEntries.begin(), _dataEntries.end() - 1, _dataEntries.end());
+		// for(int i = _dataEntries.size() - 1; i > 0; i--){
+		// 	_dataEntries[i] = _dataEntries[i - 1];
+		// }
+
+		_dataEntries[0] = aht.readTempAndHum();
+		auto& data = _dataEntries[0];
+		
+		printf("Temperature: %d.%d °C\r\n", (int) data.first, (int) ((data.first - (int) data.first) * 100));
+		printf("Humidity: %d.%d %%\r\n", (int) data.second, (int) ((data.second - (int) data.second) * 100));
+
+		std::array<float, _TEST_STORAGE_SIZE> tmp;
+		std::transform(_dataEntries.begin(), _dataEntries.end(), tmp.begin(), [](const auto& e){ return (_count < 5) ? e.first : e.second; });
+
+		// std::for_each(_dataEntries.begin(), _dataEntries.end(), [](auto& e){printf("%d.%d\r\n", (int) e.first, (int) ((e.first - (int) e.first) * 100));});
+		// std::for_each(tmp.begin(), tmp.end(), [](auto& e){printf("%d.%d\r\n", (int) e, (int) ((e - (int) e) * 100));});
+
+		graph.drawGraph({tmp.begin(), _TEST_STORAGE_SIZE});
+
+		_count = (_count + 1) % 10;
+
+		Delay_Ms(1000);
     }
 }
