@@ -27,6 +27,7 @@ namespace display
 			virtual void flush() = 0;
 
 			virtual bool addDrawAction(DrawAction&& action) = 0;
+			virtual void clearDrawActions() = 0;
 
 			virtual int getWidth() const = 0;
 			virtual int getHeight() const = 0;

@@ -27,6 +27,7 @@ namespace display
 			virtual void flush() override;
 
 			virtual bool addDrawAction(DisplayWriter::DrawAction&& action) override;
+			virtual void clearDrawActions() override;
 
 			virtual int getWidth() const override;
 			virtual int getHeight() const override;
@@ -55,6 +56,7 @@ namespace display
 			virtual void flush() override;
 
 			virtual bool addDrawAction(DisplayWriter::DrawAction&& action) override;
+			virtual void clearDrawActions() override;
 		
 		private:
 			std::array<DisplayWriter::DrawAction, 10> _actions {};

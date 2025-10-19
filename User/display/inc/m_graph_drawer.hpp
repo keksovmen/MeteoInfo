@@ -109,6 +109,6 @@ namespace display
 		private:
 			DisplayWriter& _writer;
 			FontWriter& _fontWriter;
-			std::string_view _label;
+			std::string_view _label = {};
 	};
 }

@@ -101,6 +101,12 @@ bool BufferedWriter<N>::addDrawAction(DisplayWriter::DrawAction&& action)
 }
 
 template<int N>
+void BufferedWriter<N>::clearDrawActions()
+{
+	
+}
+
+template<int N>
 int BufferedWriter<N>::getWidth() const
 {
 	return _disp.getWidth();
@@ -148,6 +154,12 @@ bool PartitionBufferedWriter<N>::addDrawAction(DisplayWriter::DrawAction&& actio
 	_length++;
 
 	return true;
+}
+
+template<int N>
+void PartitionBufferedWriter<N>::clearDrawActions()
+{
+	_length = 0;
 }
 
 template<int N>
