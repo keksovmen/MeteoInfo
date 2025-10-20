@@ -18,7 +18,7 @@ namespace display
 			enum class FontSize : int
 			{
 				SMALL,
-				MEDIUM,
+				// MEDIUM,
 				COUNT
 			};
 

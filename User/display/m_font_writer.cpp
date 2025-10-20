@@ -7,13 +7,13 @@ using namespace display;
 
 
 extern const uint8_t glyphs_small[];
-extern const uint8_t glyphs_medium[];
+// extern const uint8_t glyphs_medium[];
 
 
 
 const std::array<FontWriter::FontEntry, static_cast<int>(FontWriter::FontSize::COUNT)> FontWriter::_fonts = {
 	{{8, 8, 6, ' ', 'Z', glyphs_small},
-	{8, 16, 8, ' ', 'Z', glyphs_medium},
+	// {8, 16, 8, ' ', 'Z', glyphs_medium},
 	}
 };
 
