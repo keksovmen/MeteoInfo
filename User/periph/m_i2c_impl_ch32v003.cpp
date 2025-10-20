@@ -1,4 +1,4 @@
-#include "m_i2c_impl.hpp"
+#include "m_i2c_hal.hpp"
 
 #include "ch32v00x.h"
 
@@ -8,7 +8,7 @@ using namespace periph;
 
 
 
-void periph::i2c_init(int bound)
+void I2C_Hal::init(int bound)
 {
 	GPIO_InitTypeDef GPIO_InitStructure = {0};
 	I2C_InitTypeDef I2C_InitTSturcture = {0};
@@ -37,7 +37,7 @@ void periph::i2c_init(int bound)
 	I2C_Cmd (I2C1, ENABLE);
 }
 
-void periph::i2c_start_sequence(void)
+void I2C_Hal::startSignal(void)
 {
 	while (I2C_GetFlagStatus (I2C1, I2C_FLAG_BUSY))
 		;
@@ -47,19 +47,19 @@ void periph::i2c_start_sequence(void)
 		;
 }
 
-void periph::i2c_stop_sequence(void)
+void I2C_Hal::stopSignal(void)
 {
 	I2C_GenerateSTOP (I2C1, ENABLE);
 }
 
-void periph::i2c_write_request(int address)
+void I2C_Hal::readRequest(int address)
 {
 	I2C_Send7bitAddress (I2C1, address, I2C_Direction_Transmitter);
 	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
 		;
 }
 
-void periph::i2c_read_request(int address)
+void I2C_Hal::writeRequest(int address)
 {
 	//TODO: fix direction
 	I2C_Send7bitAddress (I2C1, address, I2C_Direction_Receiver);
@@ -67,18 +67,23 @@ void periph::i2c_read_request(int address)
 		;
 }
 
-void periph::i2c_write_byte(uint8_t data)
+void I2C_Hal::writeData(int data)
 {
 	I2C_SendData (I2C1, data);
 	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
 		;
 }
 
-uint8_t periph::i2c_read_byte()
+uint8_t I2C_Hal::readData()
 {
 	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_BYTE_RECEIVED))
 		;
 	uint8_t result = I2C_ReceiveData (I2C1);
 
 	return result;
+}
+
+void I2C_Hal::delayMs(uint32_t ms)
+{
+	Delay_Ms(ms);
 }

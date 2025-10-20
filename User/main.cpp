@@ -13,8 +13,7 @@
 
 #include "debug.h"
 
-#include "m_i2c.hpp"
-#include "m_i2c_impl.hpp"
+#include "m_i2c_hal.hpp"
 #include "m_hal_ssd1315.hpp"
 #include "m_buffered_display.hpp"
 #include "m_font_writer.hpp"
@@ -26,16 +25,7 @@
 
 
 
-static periph::I2C_Peripheral i2c{
-	&periph::i2c_init,
-	&periph::i2c_start_sequence,
-	&periph::i2c_read_request,
-	&periph::i2c_write_request,
-	&periph::i2c_write_byte,
-	&periph::i2c_read_byte,
-	&periph::i2c_stop_sequence,
-	&Delay_Ms
-};
+static periph::I2C_Hal i2c;
 
 static display::HalDisplaySSD1315 ssd1315(i2c);
 static display::PartitionBufferedWriter<128> writer(ssd1315);

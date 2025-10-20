@@ -8,17 +8,17 @@ namespace periph
 	class I2C_Hal
 	{
 		public:
-			virtual ~I2C_Hal() = default;
+			void init(int speed);
 
-			
+			void startSignal();
+			void stopSignal();
 
-			virtual void init(int speed) = 0;
-			virtual void startSignal() = 0;
-			virtual void stopSignal() = 0;
-			virtual void readRequest(int address) = 0;
-			virtual void writeRequest(int address) = 0;
-			virtual void writeData(int data) = 0;
-			virtual uint8_t readData() = 0;
-			virtual void delayMs(uint32_t ms) = 0;
+			void readRequest(int address);
+			void writeRequest(int address);
+
+			void writeData(int data);
+			uint8_t readData();
+
+			void delayMs(uint32_t ms);
 	};
 }

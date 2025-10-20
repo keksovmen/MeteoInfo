@@ -4,6 +4,7 @@
 		"ch32v00x_spi.h": "c",
 		"stdint.h": "c",
 		"debug.h": "c",
-		"stdio.h": "c"
+		"stdio.h": "c",
+		"array": "cpp"
 	}
 }
