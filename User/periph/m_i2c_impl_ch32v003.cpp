@@ -54,16 +54,15 @@ void I2C_Hal::stopSignal(void)
 
 void I2C_Hal::readRequest(int address)
 {
-	I2C_Send7bitAddress (I2C1, address, I2C_Direction_Transmitter);
-	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
+	I2C_Send7bitAddress (I2C1, (address << 1) | 1, I2C_Direction_Receiver);
+	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED))
 		;
 }
 
 void I2C_Hal::writeRequest(int address)
 {
-	//TODO: fix direction
-	I2C_Send7bitAddress (I2C1, address, I2C_Direction_Receiver);
-	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED))
+	I2C_Send7bitAddress (I2C1, address << 1, I2C_Direction_Transmitter);
+	while (!I2C_CheckEvent (I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
 		;
 }
 
