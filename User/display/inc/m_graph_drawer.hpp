@@ -14,6 +14,7 @@
 
 namespace display
 {
+	template<DisplayBasic D>
 	class GraphDrawer
 	{
 		public:
@@ -21,7 +22,7 @@ namespace display
 
 
 
-			GraphDrawer(DisplayWriter& writer, FontWriter& fontWriter)
+			GraphDrawer(D& writer, FontWriter<D>& fontWriter)
 				: _writer(writer), _fontWriter(fontWriter)
 			{
 
@@ -33,7 +34,7 @@ namespace display
 					// define space between left side and Y axis and top space for Y axis
 					const int offset = 4;
 					// define space between bottom of the screen and X axis line
-					const int offsetY = _fontWriter.getFontHeight<FontWriter::FontSize::SMALL>() + 1;
+					const int offsetY = _fontWriter.template getFontHeight<FontWriter<D>::FontSize::SMALL>() + 1;
 					// define size of dot
 					const int blockSize = 6;
 					const int halfBlockSize = blockSize / 2;
@@ -56,13 +57,14 @@ namespace display
 					//need min and max values to calculate offsets
 					float max = *std::max_element(data.begin(), data.begin() + std::min<int>(data.size(), MAX_SIZE));
 					float min = *std::min_element(data.begin(), data.begin() + std::min<int>(data.size(), MAX_SIZE));
+
 					float middle = (max + min) / 2;
 					float range = max - min;
 
 					char buff[16] = {0};
 					sprintf(buff, "%d.%d", (int) max, (int) ((max - (int) max) * 100));
 
-					_fontWriter.changeSize<display::FontWriter::FontSize::SMALL>();
+					_fontWriter.template changeSize<display::FontWriter<D>::FontSize::SMALL>();
 					_fontWriter.drawStr(offset * 2.5, offset, buff);
 					_writer.drawLine(offset / 2, startY, offset + offset / 2, startY);
 
@@ -92,8 +94,8 @@ namespace display
 						yPrev = yPosition;
 					}
 
-					int beginingX = (_writer.getWidth() - _fontWriter.calcLength<FontWriter::FontSize::SMALL>(_label)) / 2;
-					_fontWriter.drawStr(beginingX, _writer.getHeight() - (_fontWriter.getFontHeight<FontWriter::FontSize::SMALL>()), _label);
+					int beginingX = (_writer.getWidth() - _fontWriter.template calcLength<FontWriter<D>::FontSize::SMALL>(_label)) / 2;
+					_fontWriter.drawStr(beginingX, _writer.getHeight() - (_fontWriter.template getFontHeight<FontWriter<D>::FontSize::SMALL>()), _label);
 				});
 
 				_writer.flush();
@@ -107,8 +109,8 @@ namespace display
 
 		
 		private:
-			DisplayWriter& _writer;
-			FontWriter& _fontWriter;
+			D& _writer;
+			FontWriter<D>& _fontWriter;
 			std::string_view _label = {};
 	};
 }

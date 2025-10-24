@@ -29,8 +29,8 @@ static periph::I2C_Hal i2c;
 
 static display::HalDisplaySSD1315 ssd1315(i2c);
 static display::PartitionBufferedWriter<128> writer(ssd1315);
-static display::FontWriter font(writer);
-static display::GraphDrawer graph(writer, font);
+static display::FontWriter<decltype(writer)> font(writer);
+static display::GraphDrawer<decltype(writer)> graph(writer, font);
 static periph::Aht20 aht(i2c);
 static std::array<std::pair<float, float>, _TEST_STORAGE_SIZE> _dataEntries;
 static int _count = 0;

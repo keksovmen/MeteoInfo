@@ -6,12 +6,18 @@
 #include <string_view>
 #include <stdint.h>
 
+#include "m_buffered_display.hpp"
 #include "m_display_writer.hpp"
 
 
 
+extern const uint8_t glyphs_small[];
+
+
+
 namespace display
-{
+{	
+	template<DisplayBasic D>
 	class FontWriter
 	{
 		public:
@@ -24,12 +30,30 @@ namespace display
 
 
 
-			FontWriter(DisplayWriter& disp);
+			FontWriter(D& disp)
+				: _disp(disp), _activeFont(&_fonts[0])
+			{
 
+			}
 
+			void drawChar(int x, int y, char c)
+			{
+				const uint8_t* letter = _activeFont->symbols;
+				if(c < _activeFont->firstLetter || c > _activeFont->lastLetter){
+					//error case
+				}else{
+					letter = &_activeFont->symbols[(c - _activeFont->firstLetter) * _activeFont->height];
+				}
 
-			void drawChar(int x, int y, char c);
-			void drawStr(int x, int y, std::string_view str);
+				_disp.drawBitmap(x, y, _activeFont->width, _activeFont->height, letter);
+			}
+
+			void drawStr(int x, int y, std::string_view str)
+			{
+				for (size_t i = 0; i < str.length(); i++) {
+					drawChar(x + i * _activeFont->spaceSize, y, str[i]);
+				}
+			}
 
 			template<FontSize S>
 			constexpr void changeSize()
@@ -66,11 +90,15 @@ namespace display
 
 
 
-			static const std::array<FontEntry, static_cast<int>(FontSize::COUNT)> _fonts;
+			constexpr static const std::array<FontEntry, static_cast<int>(FontSize::COUNT)> _fonts = {
+				{{8, 8, 6, ' ', 'Z', glyphs_small},
+				// {8, 16, 8, ' ', 'Z', glyphs_medium},
+				}
+			};
 
 
 
-			DisplayWriter& _disp;
+			D& _disp;
 			const FontEntry* _activeFont;
 	};
 }
