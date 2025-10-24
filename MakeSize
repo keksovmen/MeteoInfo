@@ -1,0 +1,38 @@
+# Output file for size results
+SIZE_OUTPUT = object_sizes.txt
+SIZE = ~/MounRiver/MRS_Toolchain_Linux_x64_V1.92.1/RISC-V_Embedded_GCC12/bin/riscv-none-elf-size
+# Find all object files recursively (supports .o, .obj, etc.)
+OBJECT_FILES = $(shell find . -name "*.o" -o -name "*.obj")
+ELF_FILES = $(shell find . -name "*.hex" -o -name "*.hex")
+
+# Default target
+all: size_report
+
+# Target to generate size report
+size_report: $(OBJECT_FILES)
+	$(SIZE) -t $(OBJECT_FILES) > $(SIZE_OUTPUT) 2>/dev/null || echo "  Error: Could not read size" >> $(SIZE_OUTPUT);
+	$(SIZE) $(ELF_FILES) >> $(SIZE_OUTPUT) 2>/dev/null || echo "  Error: Could not read size" >> $(SIZE_OUTPUT);
+	@echo "Size report saved to $(SIZE_OUTPUT)"
+
+# Alternative version using xargs (more efficient for large numbers of files)
+size_report_xargs: $(OBJECT_FILES)
+	@echo "Generating size report using xargs..."
+	@echo "Object Files Size Report - $(shell date)" > $(SIZE_OUTPUT)
+	@echo "==========================================" >> $(SIZE_OUTPUT)
+	@echo "" >> $(SIZE_OUTPUT)
+	@printf '%s\n' $(OBJECT_FILES) | xargs -I {} sh -c 'echo "File: {}" >> $(SIZE_OUTPUT); $(SIZE) {} >> $(SIZE_OUTPUT) 2>/dev/null || echo "  Error: Could not read size" >> $(SIZE_OUTPUT); echo "" >> $(SIZE_OUTPUT)'
+	@echo "Size report saved to $(SIZE_OUTPUT)"
+
+# Clean the report
+clean:
+	rm -f $(SIZE_OUTPUT)
+
+# Show found object files
+list_objects:
+	@echo "Found object files:"
+	@for obj in $(OBJECT_FILES); do \
+		echo "  $$obj"; \
+	done
+	@echo "Total: $(words $(OBJECT_FILES)) files"
+
+.PHONY: all size_report size_report_xargs clean list_objects
