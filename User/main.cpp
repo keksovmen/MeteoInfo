@@ -64,11 +64,45 @@ static int _test_aht20(void)
 	return 0;
 }
 
+static void _init_sleep_intr()
+{
+    EXTI_InitTypeDef EXTI_InitStructure = {0};
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+
+    EXTI_InitStructure.EXTI_Line = EXTI_Line9;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
+}
+
+static void _sleep()
+{
+	RCC_LSICmd(ENABLE);
+    while(RCC_GetFlagStatus(RCC_FLAG_LSIRDY) == RESET);
+	printf("Going to sleep\r\n");
+
+	PWR_AWU_SetPrescaler(PWR_AWU_Prescaler_61440);
+    PWR_AWU_SetWindowValue(4);
+    PWR_AutoWakeUpCmd(ENABLE);
+	//uncomment to work
+    // PWR_EnterSTANDBYMode(PWR_STANDBYEntry_WFE);
+
+	//need to reinit for some reason it sensd garbage
+    USART_Printf_Init (115200);
+
+	printf("Waked up\r\n");
+}
 
 
 int main (void) {
+    // NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
     SystemCoreClockUpdate();
     Delay_Init();
+	_init_sleep_intr();
 #if (SDI_PRINT == SDI_PR_OPEN)
     SDI_Printf_Enable();
 #else
@@ -86,57 +120,6 @@ int main (void) {
 	
 	ssd1315.init();
 	ssd1315.clearScreen();
-
-	// writer.addDrawAction([](){
-		// w.drawRectangle(0, 16, 16, 8);
-		// w.setPixel(127, 0, true);
-		// w.setPixel(126, 1, true);
-		// w.setPixel(125, 2, true);
-		// w.setPixel(124, 3, true);
-		// w.setPixel(123, 4, true);
-		// w.setPixel(122, 5, true);
-		// w.setPixel(121, 6, true);
-		// w.setPixel(120, 7, true);
-
-		// w.setPixel(127, 7, true);
-		// w.setPixel(126, 6, true);
-		// w.setPixel(125, 5, true);
-		// w.setPixel(124, 4, true);
-		// w.setPixel(123, 3, true);
-		// w.setPixel(122, 2, true);
-		// w.setPixel(121, 1, true);
-		// w.setPixel(120, 0, true);
-
-		// w.drawLine(120, 8, 127, 15);
-		// w.drawLine(120, 15, 127, 8);
-
-		// font.changeSize<display::FontWriter::FontSize::MEDIUM>();
-		// font.drawStr(0, 0, "%+-_*!@#");
-
-		// font.changeSize<display::FontWriter::FontSize::SMALL>();
-		// font.drawStr(0, 32, "+ 0123456789 -");
-
-		// font.changeSize<display::FontWriter::FontSize::MEDIUM>();
-		// font.drawStr(64, 48, "ABCDEZ");
-
-		
-	// 	auto data = aht.readTempAndHum();
-
-	// 	char buff[32] = {0};
-	// 	sprintf(buff, "TEMP: %d.%d C", (int) data.first, (int) ((data.first - (int) data.first) * 100));
-
-	// 	font.changeSize<display::FontWriter::FontSize::MEDIUM>();
-	// 	font.drawStr(0, 0, buff);
-
-	// 	sprintf(buff, "HUM: %d.%d %%", (int) data.second, (int) ((data.second - (int) data.second) * 100));
-	// 	font.drawStr(0, 16, buff);
-	// });
-
-
-	// writer.flush();
-
-	// float dataGraph[] = {5.0f, 3.0f, 1.0f, 4.0f, 6.0f, -1.0f};
-	// graph.drawGraph(dataGraph);
 
 	// char buff[8] = {0, 0, 0, 0};
 
@@ -187,6 +170,7 @@ int main (void) {
 
 
     while (1) {
+		ssd1315.turnOn();
         // printf ("Cycle\r\n");
 		// std::copy(_dataEntries.begin(), _dataEntries.end() - 1, &_dataEntries[1]);
 		std::copy_backward(_dataEntries.begin(), _dataEntries.end() - 1, _dataEntries.end());
@@ -212,5 +196,8 @@ int main (void) {
 		_count = (_count + 1) % 10;
 
 		Delay_Ms(1000);
+
+		ssd1315.turnOff();
+		_sleep();
     }
 }
