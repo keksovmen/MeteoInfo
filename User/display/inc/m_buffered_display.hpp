@@ -94,8 +94,8 @@ namespace display
 					x = x - _currentX;
 					y = y - _currentY;
 
-					const int page = y / 8;
-					const int shift = y % 8;
+					const int page = y / _HEIGHT;
+					const int shift = y % _HEIGHT;
 					const int offset = page * _disp.getWidth() + x;
 
 					if(state){
@@ -109,12 +109,12 @@ namespace display
 
 			void flush()
 			{
-				for (int i = 0; i < _disp.getHeight() / 8; i++)
+				for (int i = 0; i < _disp.getHeight() / _HEIGHT; i++)
 				{
 					_setRegion(i);
 					_applyDrawActions();
 
-					_disp.drawRegion(_currentX, _currentY, _width, _height, _buffer);
+					_disp.drawRegion(_currentX, _currentY, _WIDTH, _HEIGHT, _buffer);
 				}
 			}
 
@@ -146,11 +146,12 @@ namespace display
 			uint8_t _buffer[N] = {0};
 			std::array<typename DisplayWriter<PartitionBufferedWriter<N>>::DrawAction, 10> _actions {};
 
+			const int _WIDTH = N;
+			const int _HEIGHT = 8;
+			
 			int _length = 0;
 			int _currentX = 0;
 			int _currentY = 0;
-			const int _width = N;
-			const int _height = 8;
 
 
 
@@ -162,11 +163,11 @@ namespace display
 
 			bool _isPixelInRegion(int x, int y) const
 			{
-				if(x < _currentX || x >= (_currentX + _width)){
+				if(x < _currentX || x >= (_currentX + _WIDTH)){
 					return false;
 				}
 
-				if(y < _currentY || y >= (_currentY + _height)){
+				if(y < _currentY || y >= (_currentY + _HEIGHT)){
 					return false;
 				}
 
