@@ -13,11 +13,20 @@
 
 namespace display
 {
-	template<int N>
-	class BufferedWriter : public DisplayWriter<BufferedWriter<N>>
+	template<int N, HalDisplayConcept D>
+	class BufferedWriter : public DisplayWriter<BufferedWriter<N, D>>
 	{
 		public:
-			BufferedWriter(HalDisplayI& disp)
+			using DisplayWriter<BufferedWriter<N, D>>::setPixel;
+			using DisplayWriter<BufferedWriter<N, D>>::flush;
+			using DisplayWriter<BufferedWriter<N, D>>::addDrawAction;
+			using DisplayWriter<BufferedWriter<N, D>>::clearDrawActions;
+			using DisplayWriter<BufferedWriter<N, D>>::getWidth;
+			using DisplayWriter<BufferedWriter<N, D>>::getHeight;
+
+
+
+			BufferedWriter(D& disp)
 				: _disp(disp)
 			{
 				
@@ -25,7 +34,7 @@ namespace display
 
 
 
-			void setPixel(int x, int y, bool state)
+			void _setPixel(int x, int y, bool state)
 			{
 				const int page = y / 8;
 				const int shift = y % 8;
@@ -38,49 +47,56 @@ namespace display
 				}
 			}
 
-			void flush()
+			void _flush()
 			{
 				_disp.drawRegion(0, 0, _disp.getWidth(), _disp.getHeight(), _buffer);
 			}
 
-			bool addDrawAction(DisplayWriter<BufferedWriter<N>>::DrawAction&& action)
+			bool _addDrawAction(DisplayWriter<BufferedWriter<N, D>>::DrawAction&& action)
 			{
 				std::invoke(action);
 				return false;
 			}
 
-			void clearDrawActions()
+			void _clearDrawActions()
 			{
 				
 			}
 
-			int getWidth() const
+			int _getWidth() const
 			{
 				return _disp.getWidth();
 			}
 
-			int getHeight() const
+			int _getHeight() const
 			{
 				return _disp.getHeight();
 			}
 
 		
 		protected:
-			HalDisplayI& _disp;
+			D& _disp;
 			uint8_t _buffer[N] = {0};
 	};
 
 
 
-	template<int N>
-	class PartitionBufferedWriter : public DisplayWriter<PartitionBufferedWriter<N>>
+	template<int N, HalDisplayConcept D>
+	class PartitionBufferedWriter : public DisplayWriter<PartitionBufferedWriter<N, D>>
 	{
 		public:
-			// using BufferedWriter<N>::setPixel;
+			using DisplayWriter<PartitionBufferedWriter<N, D>>::setPixel;
+			using DisplayWriter<PartitionBufferedWriter<N, D>>::drawLine;
+			using DisplayWriter<PartitionBufferedWriter<N, D>>::drawRectangle;
+			using DisplayWriter<PartitionBufferedWriter<N, D>>::flush;
+			using DisplayWriter<PartitionBufferedWriter<N, D>>::addDrawAction;
+			using DisplayWriter<PartitionBufferedWriter<N, D>>::clearDrawActions;
+			using DisplayWriter<PartitionBufferedWriter<N, D>>::getWidth;
+			using DisplayWriter<PartitionBufferedWriter<N, D>>::getHeight;
 
 
 
-			PartitionBufferedWriter(HalDisplayI& disp)
+			PartitionBufferedWriter(D& disp)
 				: _disp(disp)
 			{
 
@@ -88,7 +104,7 @@ namespace display
 
 
 
-			void setPixel(int x, int y, bool state)
+			void _setPixel(int x, int y, bool state)
 			{
 				if(_isPixelInRegion(x, y)){
 					x = x - _currentX;
@@ -107,7 +123,7 @@ namespace display
 				}
 			}
 
-			void flush()
+			void _flush()
 			{
 				for (int i = 0; i < _disp.getHeight() / _HEIGHT; i++)
 				{
@@ -118,7 +134,7 @@ namespace display
 				}
 			}
 
-			bool addDrawAction(DisplayWriter<PartitionBufferedWriter<N>>::DrawAction&& action)
+			bool _addDrawAction(DisplayWriter<PartitionBufferedWriter<N, D>>::DrawAction&& action)
 			{
 				_actions[_length] = std::move(action);
 				_length++;
@@ -126,29 +142,29 @@ namespace display
 				return true;
 			}
 
-			void clearDrawActions()
+			void _clearDrawActions()
 			{
 				_length = 0;
 			}
 
-			int getWidth() const
+			int _getWidth() const
 			{
 				return _disp.getWidth();
 			}
 
-			int getHeight() const
+			int _getHeight() const
 			{
 				return _disp.getHeight();
 			}
 		
 		private:
-			HalDisplayI& _disp;
+			D& _disp;
 			uint8_t _buffer[N] = {0};
-			std::array<typename DisplayWriter<PartitionBufferedWriter<N>>::DrawAction, 10> _actions {};
+			std::array<typename DisplayWriter<PartitionBufferedWriter<N, D>>::DrawAction, 10> _actions {};
 
 			const int _WIDTH = N;
 			const int _HEIGHT = 8;
-			
+
 			int _length = 0;
 			int _currentX = 0;
 			int _currentY = 0;

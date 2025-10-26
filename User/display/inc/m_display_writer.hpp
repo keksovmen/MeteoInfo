@@ -41,7 +41,7 @@ namespace display
 
 			void setPixel(int x, int y, bool state)
 			{
-				static_cast<Derived*>(this)->setPixel(x, y, state);
+				static_cast<Derived*>(this)->_setPixel(x, y, state);
 			}
 
 			void drawLine(int x0, int y0, int x1, int y1)
@@ -92,27 +92,27 @@ namespace display
 
 			void flush()
 			{
-				static_cast<Derived*>(this)->flush();
+				static_cast<Derived*>(this)->_flush();
 			}
 
 			bool addDrawAction(DrawAction&& action)
 			{
-				return static_cast<Derived*>(this)->addDrawAction(std::move(action));
+				return static_cast<Derived*>(this)->_addDrawAction(std::move(action));
 			}
 
 			void clearDrawActions()
 			{
-				static_cast<Derived*>(this)->clearDrawActions();
+				static_cast<Derived*>(this)->_clearDrawActions();
 			}
 
 			int getWidth() const
 			{
-				return static_cast<Derived*>(this)->getWidth();
+				return static_cast<const Derived*>(this)->_getWidth();
 			}
 
 			int getHeight() const
 			{
-				return static_cast<Derived*>(this)->getHeight();
+				return static_cast<const Derived*>(this)->_getHeight();
 			}
 	};
 }

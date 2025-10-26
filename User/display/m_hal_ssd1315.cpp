@@ -22,7 +22,7 @@ HalDisplaySSD1315::HalDisplaySSD1315(periph::I2C_Hal& i2c)
 
 }
 
-bool HalDisplaySSD1315::init()
+bool HalDisplaySSD1315::_init()
 {
 	turnOff();
 
@@ -64,34 +64,34 @@ bool HalDisplaySSD1315::init()
     return true;
 }
 
-void HalDisplaySSD1315::turnOn()
+void HalDisplaySSD1315::_turnOn()
 {
     _writeCommand(_CMD_DISPLAY_ON);  // Display ON
 	_isOn = true;
 }
 
-void HalDisplaySSD1315::turnOff()
+void HalDisplaySSD1315::_turnOff()
 {
 	_writeCommand(_CMD_DISPLAY_OFF);  // Display OFF
 	_isOn = false;
 }
 
-bool HalDisplaySSD1315::isTurnedOn() const
+bool HalDisplaySSD1315::_isTurnedOn() const
 {
     return _isOn;
 }
 
-int HalDisplaySSD1315::getWidth() const
+int HalDisplaySSD1315::_getWidth() const
 {
     return _SCREEN_WIDTH;
 }
 
-int HalDisplaySSD1315::getHeight() const
+int HalDisplaySSD1315::_getHeight() const
 {
     return _SCREEN_HEIGHT;
 }
 
-void HalDisplaySSD1315::drawPixel(int x, int y)
+void HalDisplaySSD1315::_drawPixel(int x, int y)
 {
 	_setDrawRect(x, y, 1, 1);
 	int bitToLight = y % 8;
@@ -99,7 +99,7 @@ void HalDisplaySSD1315::drawPixel(int x, int y)
 	_writeData(1 << bitToLight);
 }
 
-void HalDisplaySSD1315::drawRegion(int x, int y, int width, int height, uint8_t* data)
+void HalDisplaySSD1315::_drawRegion(int x, int y, int width, int height, uint8_t* data)
 {
 	_setDrawRect(x, y, width, height);
 
@@ -110,7 +110,7 @@ void HalDisplaySSD1315::drawRegion(int x, int y, int width, int height, uint8_t*
     }
 }
 
-void HalDisplaySSD1315::clearRegion(int x, int y, int width, int height)
+void HalDisplaySSD1315::_clearRegion(int x, int y, int width, int height)
 {
 	_setDrawRect(x, y, width, height);
 

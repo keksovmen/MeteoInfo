@@ -9,23 +9,36 @@
 
 namespace display
 {
-	class HalDisplaySSD1315 : public HalDisplayI
+	class HalDisplaySSD1315 : public HalDisplayI<HalDisplaySSD1315>
 	{
 		public:
+			using HalDisplayI<HalDisplaySSD1315>::init;
+			using HalDisplayI<HalDisplaySSD1315>::turnOn;
+			using HalDisplayI<HalDisplaySSD1315>::turnOff;
+			using HalDisplayI<HalDisplaySSD1315>::isTurnedOn;
+			using HalDisplayI<HalDisplaySSD1315>::getWidth;
+			using HalDisplayI<HalDisplaySSD1315>::getHeight;
+			using HalDisplayI<HalDisplaySSD1315>::drawPixel;
+			using HalDisplayI<HalDisplaySSD1315>::drawRegion;
+			using HalDisplayI<HalDisplaySSD1315>::clearRegion;
+			using HalDisplayI<HalDisplaySSD1315>::clearScreen;
+
+
+
 			HalDisplaySSD1315(periph::I2C_Hal& i2c);
 
 			//need i2c periph abstraction
-			virtual bool init() override;
+			bool _init();
 
-			virtual void turnOn() override;
-			virtual void turnOff() override;
-			virtual bool isTurnedOn() const override;
+			void _turnOn();
+			void _turnOff();
+			bool _isTurnedOn() const;
 
-			virtual int getWidth() const override;
-			virtual int getHeight() const override;
+			int _getWidth() const;
+			int _getHeight() const;
 
 			//Will fire only single pixel and disable the whole column
-			virtual void drawPixel(int x, int y) override;
+			void _drawPixel(int x, int y);
 
 			/**
 			 * @brief 
@@ -36,8 +49,8 @@ namespace display
 			 * @param height 
 			 * @param data one byte = one column of 8 pixels
 			 */
-			virtual void drawRegion(int x, int y, int width, int height, uint8_t* data) override;
-			virtual void clearRegion(int x, int y, int width, int height) override;
+			void _drawRegion(int x, int y, int width, int height, uint8_t* data);
+			void _clearRegion(int x, int y, int width, int height);
 		
 		private:
 			periph::I2C_Hal& _i2c;
