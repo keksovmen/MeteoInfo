@@ -49,7 +49,7 @@ namespace display
 
 			bool isTurnedOn() const
 			{
-				static_cast<const Derived*>(this)->_isTurnedOn();	
+				return static_cast<const Derived*>(this)->_isTurnedOn();	
 			}
 
 			int getWidth() const
