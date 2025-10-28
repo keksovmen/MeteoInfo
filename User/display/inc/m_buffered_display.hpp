@@ -24,6 +24,8 @@ namespace display
 			using DisplayWriter<BufferedWriter<N, D>>::getWidth;
 			using DisplayWriter<BufferedWriter<N, D>>::getHeight;
 
+			friend DisplayWriter<BufferedWriter<N, D>>;
+
 
 
 			BufferedWriter(D& disp)
@@ -32,7 +34,7 @@ namespace display
 				
 			}
 
-
+		protected:
 
 			void _setPixel(int x, int y, bool state)
 			{
@@ -85,14 +87,17 @@ namespace display
 	class PartitionBufferedWriter : public DisplayWriter<PartitionBufferedWriter<N, D>>
 	{
 		public:
-			using DisplayWriter<PartitionBufferedWriter<N, D>>::setPixel;
-			using DisplayWriter<PartitionBufferedWriter<N, D>>::drawLine;
-			using DisplayWriter<PartitionBufferedWriter<N, D>>::drawRectangle;
-			using DisplayWriter<PartitionBufferedWriter<N, D>>::flush;
-			using DisplayWriter<PartitionBufferedWriter<N, D>>::addDrawAction;
-			using DisplayWriter<PartitionBufferedWriter<N, D>>::clearDrawActions;
-			using DisplayWriter<PartitionBufferedWriter<N, D>>::getWidth;
-			using DisplayWriter<PartitionBufferedWriter<N, D>>::getHeight;
+			using Parent = DisplayWriter<PartitionBufferedWriter<N, D>>;
+			using Parent::setPixel;
+			using Parent::drawLine;
+			using Parent::drawRectangle;
+			using Parent::flush;
+			using Parent::addDrawAction;
+			using Parent::clearDrawActions;
+			using Parent::getWidth;
+			using Parent::getHeight;
+
+			friend Parent;
 
 
 
@@ -102,8 +107,7 @@ namespace display
 
 			}
 
-
-
+		protected:
 			void _setPixel(int x, int y, bool state)
 			{
 				if(_isPixelInRegion(x, y)){

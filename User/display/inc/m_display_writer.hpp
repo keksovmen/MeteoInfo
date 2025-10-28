@@ -114,5 +114,8 @@ namespace display
 			{
 				return static_cast<const Derived*>(this)->_getHeight();
 			}
+		
+		protected:
+			DisplayWriter() = default;
 	};
 }
