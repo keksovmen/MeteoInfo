@@ -18,6 +18,8 @@
 #include "m_buffered_display.hpp"
 #include "m_font_writer.hpp"
 #include "m_graph_drawer.hpp"
+#include "m_sys_time.hpp"
+#include "m_sleep.hpp"
 
 
 
@@ -52,7 +54,7 @@ static int _test_aht20(void)
 	printf("AHT20 initialized successfully\r\n");
 	
 	// Read sensor data
-	std::pair<float, float> data = aht.readTempAndHum();
+	const std::pair<float, float> data = aht.readTempAndHum();
 
 	// if (aht20_read_temperature_humidity(&i2c, &sensor_data)) {
 	printf("Temperature: %d.%d °C\r\n", (int) data.first, (int) ((data.first - (int) data.first) * 100));
@@ -64,54 +66,23 @@ static int _test_aht20(void)
 	return 0;
 }
 
-static void _init_sleep_intr()
-{
-    EXTI_InitTypeDef EXTI_InitStructure = {0};
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-
-    EXTI_InitStructure.EXTI_Line = EXTI_Line9;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
-
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
-}
-
-static void _sleep()
-{
-	RCC_LSICmd(ENABLE);
-    while(RCC_GetFlagStatus(RCC_FLAG_LSIRDY) == RESET);
-	printf("Going to sleep\r\n");
-
-	PWR_AWU_SetPrescaler(PWR_AWU_Prescaler_61440);
-    PWR_AWU_SetWindowValue(4);
-    PWR_AutoWakeUpCmd(ENABLE);
-	//uncomment to work
-    // PWR_EnterSTANDBYMode(PWR_STANDBYEntry_WFE);
-
-	//need to reinit for some reason it sensd garbage
-    USART_Printf_Init (115200);
-
-	printf("Waked up\r\n");
-}
 
 
 int main (void) {
-    // NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-    SystemCoreClockUpdate();
-    Delay_Init();
-	_init_sleep_intr();
+	// NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+	SystemCoreClockUpdate();
+	Delay_Init();
+	periph::sleep::init();
+	periph::sys_time::init(100);
 #if (SDI_PRINT == SDI_PR_OPEN)
-    SDI_Printf_Enable();
+	SDI_Printf_Enable();
 #else
-    USART_Printf_Init (115200);
+	USART_Printf_Init (115200);
 #endif
-    printf ("SystemClk:%u\r\n", SystemCoreClock);
-    printf ("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
+	printf ("SystemClk:%lu\r\n", SystemCoreClock);
+	printf ("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
 
-    // USARTx_CFG();
+	// USARTx_CFG();
 
 	i2c.init(100000);
 
@@ -169,9 +140,9 @@ int main (void) {
 	*/
 
 
-    while (1) {
+	while (1) {
 		ssd1315.turnOn();
-        // printf ("Cycle\r\n");
+		// printf ("Cycle\r\n");
 		// std::copy(_dataEntries.begin(), _dataEntries.end() - 1, &_dataEntries[1]);
 		std::copy_backward(_dataEntries.begin(), _dataEntries.end() - 1, _dataEntries.end());
 		// for(int i = _dataEntries.size() - 1; i > 0; i--){
@@ -190,7 +161,13 @@ int main (void) {
 		// std::for_each(_dataEntries.begin(), _dataEntries.end(), [](auto& e){printf("%d.%d\r\n", (int) e.first, (int) ((e.first - (int) e.first) * 100));});
 		// std::for_each(tmp.begin(), tmp.end(), [](auto& e){printf("%d.%d\r\n", (int) e, (int) ((e - (int) e) * 100));});
 		graph.setLabel((_count < 5) ? "TEMPERATURE C" : "HUMIDITY %");
+		writer.addDrawAction([](){
+			char buff[16] = {0};
+			sprintf(buff, "%lu", periph::sys_time::currentMs());
+			font.drawStr(0, 56, buff);
+		});
 		graph.drawGraph({tmp.begin(), _TEST_STORAGE_SIZE});
+
 		writer.clearDrawActions();
 
 		_count = (_count + 1) % 10;
@@ -198,6 +175,6 @@ int main (void) {
 		Delay_Ms(1000);
 
 		ssd1315.turnOff();
-		_sleep();
-    }
+		periph::sleep::sleepForMs<1000>();
+	}
 }
