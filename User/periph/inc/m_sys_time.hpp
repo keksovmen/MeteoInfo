@@ -23,7 +23,7 @@ namespace periph
 
 		uint32_t currentMs();
 
-		// uint32_t currentSec()
+		// static uint32_t currentSec()
 		// {
 		// 	return currentMs() / 1000;
 		// }
