@@ -14,7 +14,7 @@ namespace util
 	struct TimingPair {
 		int i;
 		int divider;
-		int count;
+		uint32_t count;
 		float actual_time;
 		float deviation;
 	};
@@ -22,7 +22,7 @@ namespace util
 
 
 	template<int N>
-	constexpr TimingPair findBestTimingPair(uint32_t target_time_ms, uint32_t base_frequency, const std::array<int, N>& dividers) {
+	constexpr TimingPair findBestTimingPair(uint32_t target_time_ms, uint32_t base_frequency, uint32_t maxCount, const std::array<int, N>& dividers) {
 		// constexpr float base_frequency = baseFreq;
 		float min_deviation = std::numeric_limits<float>::max();
 		TimingPair best_pair{0, 0, 0, 0.0, 0.0};
@@ -35,10 +35,10 @@ namespace util
 			// Calculate ideal count for this divider
 			float ideal_count = static_cast<float>(target_time_ms) / time_per_count;
 			
-			// Find the closest integer count in range [0, 255]
-			int count = static_cast<int>(round(ideal_count));
+			// Find the closest integer count in range [0, maxCount]
+			uint32_t count = static_cast<uint32_t>(round(ideal_count));
 			if (count < 0) count = 0;
-			if (count > 255) count = 255;
+			if (count > maxCount) count = maxCount;
 			
 			// Calculate actual time and deviation
 			float actual_time = count * time_per_count;
