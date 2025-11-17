@@ -103,22 +103,33 @@ void HalDisplaySSD1315::_drawRegion(int x, int y, int width, int height, uint8_t
 {
 	_setDrawRect(x, y, width, height);
 
+	_i2c.startSignal();
+	_i2c.writeRequest(_I2C_ADDRESS);
+	_i2c.writeData(0x40);
+
     for (uint8_t row = 0; row < (height + 7) / 8; row++) {
         for (uint8_t i = 0; i < width; i++) {
-            _writeData(data[row * width + i]);
+			_i2c.writeData(data[row * width + i]);
         }
     }
+
+	_i2c.stopSignal();
 }
 
 void HalDisplaySSD1315::_clearRegion(int x, int y, int width, int height)
 {
 	_setDrawRect(x, y, width, height);
 
+	_i2c.startSignal();
+	_i2c.writeRequest(_I2C_ADDRESS);
+	_i2c.writeData(0x40);
+
 	for (int i = 0; i < (width * height) / 8; i++)
 	{
-		_writeData(0x00);
+		_i2c.writeData(0x00);
 	}
 	
+	_i2c.stopSignal();
 }
 
 void HalDisplaySSD1315::_writeCommand(uint8_t cmd)
