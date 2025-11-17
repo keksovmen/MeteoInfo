@@ -19,15 +19,15 @@ namespace periph
 
 	namespace sys_time
 	{
-		void init(uint32_t tickHz);
+		using time_val = uint32_t;
 
-		uint32_t currentMs();
 
-		// static uint32_t currentSec()
-		// {
-		// 	return currentMs() / 1000;
-		// }
 
-		uint32_t currentTick();
+		void init(time_val tickHz);
+
+		time_val currentMs();
+
+		time_val currentTick();
+		time_val toMs(time_val ticks);
 	}
 }

@@ -8,8 +8,13 @@
 
 
 
-static uint32_t _ticks = 0;
-static uint32_t _tickRate = 0;
+using namespace periph;
+using namespace sys_time;
+
+
+
+static time_val _ticks = 0;
+static time_val _tickRate = 0;
 
 
 
@@ -29,7 +34,7 @@ extern "C"
 
 
 
-void periph::sys_time::init(uint32_t tickHz)
+void periph::sys_time::init(time_val tickHz)
 {
 	_tickRate = tickHz;
 
@@ -49,7 +54,7 @@ void periph::sys_time::init(uint32_t tickHz)
 	NVIC_InitTypeDef interrupt = {
 		.NVIC_IRQChannel = TIM2_IRQn,
 		.NVIC_IRQChannelPreemptionPriority = 0,
-		.NVIC_IRQChannelSubPriority = 1,
+		.NVIC_IRQChannelSubPriority = 0,
 		.NVIC_IRQChannelCmd = ENABLE,
 	};
 	NVIC_Init(&interrupt);
@@ -59,12 +64,17 @@ void periph::sys_time::init(uint32_t tickHz)
 	TIM_Cmd(TIM2, ENABLE);
 }
 
-uint32_t periph::sys_time::currentMs()
+time_val periph::sys_time::currentMs()
 {
-	return _ticks * (1000 / _tickRate);
+	return toMs(_ticks);
 }
 
-uint32_t periph::sys_time::currentTick()
+time_val periph::sys_time::currentTick()
 {
 	return _ticks;
+}
+
+time_val periph::sys_time::toMs(time_val ticks)
+{
+	return ticks * (1000 / _tickRate);
 }
