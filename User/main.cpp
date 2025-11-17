@@ -34,7 +34,7 @@ static display::PartitionBufferedWriter<128, decltype(ssd1315)> writer(ssd1315);
 static display::FontWriter<decltype(writer)> font(writer);
 static display::GraphDrawer<decltype(writer)> graph(writer, font);
 static periph::Aht20 aht(i2c);
-static std::array<std::pair<float, float>, _TEST_STORAGE_SIZE> _dataEntries;
+static std::array<std::pair<int32_t, int32_t>, _TEST_STORAGE_SIZE> _dataEntries;
 static int _count = 0;
 
 // static FATFS _fs;
@@ -54,7 +54,7 @@ static int _test_aht20(void)
 	printf("AHT20 initialized successfully\r\n");
 	
 	// Read sensor data
-	const std::pair<float, float> data = aht.readTempAndHum();
+	const auto data = aht.readTempAndHum();
 
 	// if (aht20_read_temperature_humidity(&i2c, &sensor_data)) {
 	printf("Temperature: %d.%d °C\r\n", (int) data.first, (int) ((data.first - (int) data.first) * 100));
@@ -152,10 +152,10 @@ int main (void) {
 		_dataEntries[0] = aht.readTempAndHum();
 		auto& data = _dataEntries[0];
 		
-		printf("Temperature: %d.%d °C\r\n", (int) data.first, (int) ((data.first - (int) data.first) * 100));
-		printf("Humidity: %d.%d %%\r\n", (int) data.second, (int) ((data.second - (int) data.second) * 100));
+		printf("Temperature: %d.%d °C\r\n", data.first / 100, abs(data.second % 100));
+		printf("Humidity: %d.%d %%\r\n", data.second / 100, abs(data.second % 100));
 
-		std::array<float, _TEST_STORAGE_SIZE> tmp;
+		std::array<int32_t, _TEST_STORAGE_SIZE> tmp;
 		std::transform(_dataEntries.begin(), _dataEntries.end(), tmp.begin(), [](const auto& e){ return (_count < 5) ? e.first : e.second; });
 
 		// std::for_each(_dataEntries.begin(), _dataEntries.end(), [](auto& e){printf("%d.%d\r\n", (int) e.first, (int) ((e.first - (int) e.first) * 100));});
