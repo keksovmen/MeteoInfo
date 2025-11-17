@@ -97,7 +97,7 @@ namespace display
 
 			bool addDrawAction(DrawAction&& action)
 			{
-				return static_cast<Derived*>(this)->_addDrawAction(std::move(action));
+				return static_cast<Derived*>(this)->_addDrawAction(std::forward<DrawAction>(action));
 			}
 
 			void clearDrawActions()

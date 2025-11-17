@@ -140,7 +140,7 @@ namespace display
 
 			bool _addDrawAction(DisplayWriter<PartitionBufferedWriter<N, D>>::DrawAction&& action)
 			{
-				_actions[_length] = std::move(action);
+				std::construct_at(&_actions[_length], std::forward<decltype(action)>(action));
 				_length++;
 
 				return true;
