@@ -4,10 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <utility>
 
 // #include "pff.h"
-#include "m_disk_io.h"
-#include "m_fs.h"
+// #include "m_disk_io.h"
+// #include "m_fs.h"
 
 #include "m_aht20.hpp"
 
@@ -20,6 +21,7 @@
 #include "m_graph_drawer.hpp"
 #include "m_sys_time.hpp"
 #include "m_sleep.hpp"
+#include "m_button.hpp"
 
 
 
@@ -57,8 +59,8 @@ static int _test_aht20(void)
 	const auto data = aht.readTempAndHum();
 
 	// if (aht20_read_temperature_humidity(&i2c, &sensor_data)) {
-	printf("Temperature: %d.%d °C\r\n", (int) data.first, (int) ((data.first - (int) data.first) * 100));
-	printf("Humidity: %d.%d %%\r\n", (int) data.second, (int) ((data.second - (int) data.second) * 100));
+	printf("Temperature: %d.%d °C\r\n", data.first / 100, abs(data.second % 100));
+	printf("Humidity: %d.%d %%\r\n", data.second / 100, abs(data.second % 100));
 	// } else {
 	// 	printf("Failed to read sensor data\r\n");
 	// }
@@ -69,17 +71,18 @@ static int _test_aht20(void)
 
 
 int main (void) {
-	// NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 	SystemCoreClockUpdate();
 	Delay_Init();
 	periph::sleep::init();
 	periph::sys_time::init(100);
+	periph::buttons::init(1500, {});
 #if (SDI_PRINT == SDI_PR_OPEN)
 	SDI_Printf_Enable();
 #else
 	USART_Printf_Init (115200);
 #endif
-	printf ("SystemClk:%lu\r\n", SystemCoreClock);
+	printf ("SystemClk:%u\r\n", SystemCoreClock);
 	printf ("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
 
 	// USARTx_CFG();
@@ -142,7 +145,11 @@ int main (void) {
 
 	while (1) {
 		ssd1315.turnOn();
-		// printf ("Cycle\r\n");
+		printf ("Cycle\r\n");
+		if(periph::buttons::hasEvent()){
+			auto e = periph::buttons::getLastEvent();
+			printf("Event: %d, duration %d\r\n", static_cast<int>(e.action), e.duration);
+		}
 		// std::copy(_dataEntries.begin(), _dataEntries.end() - 1, &_dataEntries[1]);
 		std::copy_backward(_dataEntries.begin(), _dataEntries.end() - 1, _dataEntries.end());
 		// for(int i = _dataEntries.size() - 1; i > 0; i--){
@@ -161,20 +168,20 @@ int main (void) {
 		// std::for_each(_dataEntries.begin(), _dataEntries.end(), [](auto& e){printf("%d.%d\r\n", (int) e.first, (int) ((e.first - (int) e.first) * 100));});
 		// std::for_each(tmp.begin(), tmp.end(), [](auto& e){printf("%d.%d\r\n", (int) e, (int) ((e - (int) e) * 100));});
 		graph.setLabel((_count < 5) ? "TEMPERATURE C" : "HUMIDITY %");
-		writer.addDrawAction([](){
-			char buff[16] = {0};
-			sprintf(buff, "%lu", periph::sys_time::currentMs());
-			font.drawStr(0, 56, buff);
-		});
+		// writer.addDrawAction([](){
+		// 	char buff[16] = {0};
+		// 	sprintf(buff, "%u", periph::sys_time::currentMs());
+		// 	font.drawStr(0, 56, buff);
+		// });
 		graph.drawGraph({tmp.begin(), _TEST_STORAGE_SIZE});
 
 		writer.clearDrawActions();
 
 		_count = (_count + 1) % 10;
 
-		Delay_Ms(1000);
+		Delay_Ms(500);
 
 		ssd1315.turnOff();
-		periph::sleep::sleepForMs<1000>();
+		periph::sleep::sleepForMs<5000>();
 	}
 }
