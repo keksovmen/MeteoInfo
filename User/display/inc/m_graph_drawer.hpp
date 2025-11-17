@@ -18,7 +18,7 @@ namespace display
 	class GraphDrawer
 	{
 		public:
-			using DataArray = std::span<float>;
+			using DataArray = std::span<int32_t>;
 
 
 
@@ -55,32 +55,33 @@ namespace display
 					_writer.drawLine(offset, _writer.getHeight() - offsetY, _writer.getWidth() - offset, _writer.getHeight() - offsetY);
 
 					//need min and max values to calculate offsets
-					float max = *std::max_element(data.begin(), data.begin() + std::min<int>(data.size(), MAX_SIZE));
-					float min = *std::min_element(data.begin(), data.begin() + std::min<int>(data.size(), MAX_SIZE));
+					int32_t max = *std::max_element(data.begin(), data.begin() + std::min<int>(data.size(), MAX_SIZE));
+					int32_t min = *std::min_element(data.begin(), data.begin() + std::min<int>(data.size(), MAX_SIZE));
 
-					float middle = (max + min) / 2;
-					float range = max - min;
+					int32_t middle = (max + min) / 2;
+					int32_t range = max - min;
+					range = (range == 0) ? 1 : range;
 
 					char buff[16] = {0};
-					sprintf(buff, "%d.%d", (int) max, (int) ((max - (int) max) * 100));
+					sprintf(buff, "%d.%d", max / 100, abs(max % 100));
 
 					_fontWriter.template changeSize<display::FontWriter<D>::FontSize::SMALL>();
 					_fontWriter.drawStr(offset * 2.5, offset, buff);
 					_writer.drawLine(offset / 2, startY, offset + offset / 2, startY);
 
-					sprintf(buff, "%d.%d", (int) min, (int) ((min - (int) min) * 100));
+					sprintf(buff, "%d.%d", min / 100, abs(min % 100));
 					_fontWriter.drawStr(offset * 2.5, _writer.getHeight() - offsetY - 10, buff);
 
-					sprintf(buff, "%d.%d", (int) middle, (int) ((middle - (int) middle) * 100));
+					sprintf(buff, "%d.%d", middle / 100, abs(middle % 100));
 					_fontWriter.drawStr(offset * 2.5, startY + workingHeight / 2 - 4, buff);
 					_writer.drawLine(offset / 2, startY + workingHeight / 2, offset + offset / 2, startY + workingHeight / 2);
 	
-					float xPrev = 0.0f;
-					float yPrev = 0.0f;
+					int xPrev = 0.0f;
+					int yPrev = 0.0f;
 
 					for(int i = 0; i < std::min<int>(data.size(), MAX_SIZE); i++){
-						float yPosition = (workingHeight - ((data[i] - min) / range) * workingHeight) + startY;
-						float xPosition = startX - entryOffset * i;
+						int yPosition = workingHeight - ((data[i] - min) * workingHeight / range) + startY;
+						int xPosition = startX - entryOffset * i;
 
 						_writer.drawRectangle(xPosition - halfBlockSize, yPosition - halfBlockSize, blockSize, blockSize);
 						if(i == 0){

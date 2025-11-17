@@ -18,7 +18,14 @@ namespace periph
 			bool init();
 			void reset();
 			bool isCalibrated();
-			std::pair<float, float> readTempAndHum();
+			/**
+			 * @brief int32_t is actual value * 100, so you have 2 digits for precision
+			 * first = temperature
+			 * second = humidity
+			 * 
+			 * @return std::pair<int32_t, int32_t> 
+			 */
+			std::pair<int32_t, int32_t> readTempAndHum();
 
 		private:
 			I2C_Hal& _hal;

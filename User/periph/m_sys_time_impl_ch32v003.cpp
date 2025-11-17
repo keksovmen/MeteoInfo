@@ -61,7 +61,7 @@ void periph::sys_time::init(uint32_t tickHz)
 
 uint32_t periph::sys_time::currentMs()
 {
-	return _ticks * (1000.0f / _tickRate);
+	return _ticks * (1000 / _tickRate);
 }
 
 uint32_t periph::sys_time::currentTick()
