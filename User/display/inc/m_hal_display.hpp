@@ -30,7 +30,7 @@ namespace display
 	class HalDisplayI
 	{
 		public:
-			virtual ~HalDisplayI() = default;
+			~HalDisplayI() = default;
 			
 			bool init()
 			{
