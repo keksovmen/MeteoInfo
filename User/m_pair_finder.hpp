@@ -30,13 +30,13 @@ namespace util
 		for (size_t i = 0; i < dividers.size(); i++) {
 			int divider = dividers[i];
 			float frequency = base_frequency / divider;
-			float time_per_count = 1000.0 / frequency; // ms per count
+			float time_per_count = 1000.0f / frequency; // ms per count
 			
 			// Calculate ideal count for this divider
 			float ideal_count = static_cast<float>(target_time_ms) / time_per_count;
 			
 			// Find the closest integer count in range [0, maxCount]
-			uint32_t count = static_cast<uint32_t>(round(ideal_count));
+			uint32_t count = static_cast<uint32_t>(roundf(ideal_count));
 			if (count < 0) count = 0;
 			if (count > maxCount) count = maxCount;
 			
