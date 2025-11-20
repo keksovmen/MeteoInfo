@@ -24,6 +24,7 @@ namespace periph
 
 
 		void init(time_val tickHz);
+		void increaseTime(time_val ms);
 
 		time_val currentMs();
 

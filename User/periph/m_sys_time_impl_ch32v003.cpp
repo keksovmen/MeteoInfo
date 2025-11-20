@@ -64,6 +64,11 @@ void periph::sys_time::init(time_val tickHz)
 	TIM_Cmd(TIM2, ENABLE);
 }
 
+void periph::sys_time::increaseTime(time_val ms)
+{
+	_ticks += (ms * _tickRate) / 1000;
+}
+
 time_val periph::sys_time::currentMs()
 {
 	return toMs(_ticks);
