@@ -25,9 +25,11 @@ namespace periph
 			 * 
 			 * @return std::pair<int32_t, int32_t> 
 			 */
-			std::pair<int32_t, int32_t> readTempAndHum();
+			const std::pair<int32_t, int32_t>& readTempAndHum();
+			const std::pair<int32_t, int32_t>& getLastValue();
 
 		private:
 			I2C_Hal& _hal;
+			std::pair<int32_t, int32_t> _lastValue;
 	};
 }

@@ -71,7 +71,7 @@ bool Aht20::isCalibrated()
 	return (status & _AHT20_STATUS_CALIBRATED) != 0;
 }
 
-std::pair<int32_t, int32_t> Aht20::readTempAndHum()
+const std::pair<int32_t, int32_t>& Aht20::readTempAndHum()
 {
 	_hal.startSignal();
 	_hal.writeRequest(_AHT20_I2C_ADDRESS);
@@ -109,6 +109,13 @@ std::pair<int32_t, int32_t> Aht20::readTempAndHum()
 							  ((uint32_t)raw_data[4] << 8) |
 							  raw_data[5];
 	
-	return {(int32_t)(((temperature_raw * 20000ll) / 1048576ll) - 5000),
+	_lastValue = {(int32_t)(((temperature_raw * 20000ll) / 1048576ll) - 5000),
 			((humidity_raw * 10000ll) / 1048576ll)};
+	
+	return _lastValue;
+}
+
+const std::pair<int32_t, int32_t>& Aht20::getLastValue()
+{
+	return _lastValue;
 }
