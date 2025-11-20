@@ -13,6 +13,7 @@
 #define _LINE EXTI_Line0
 
 
+
 using namespace periph;
 using namespace buttons;
 
@@ -50,6 +51,8 @@ static void _release()
 	_event.action = (duration > _longPressDuration) ? Action::LONG_RELEASED : Action::RELEASED;
 }
 
+
+
 extern "C"{
 	void EXTI7_0_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 	void EXTI7_0_IRQHandler(void)
@@ -61,10 +64,8 @@ extern "C"{
 			}
 
 			if(GPIO_ReadInputDataBit(_PORT, _PIN)){
-				printf("Released\r\n");
 				_release();
 			}else{
-				printf("Pressed\r\n");
 				_press();
 			}
 			

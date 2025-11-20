@@ -42,3 +42,14 @@ void periph::sleep::sleepImpl(uint32_t prescaller, uint32_t count)
 
 	//reinit clock settings if needed
 }
+
+void periph::sleep::lightSleepImpl(uint32_t prescaller, uint32_t count)
+{
+	PWR_AutoWakeUpCmd(DISABLE);
+
+	PWR_AWU_SetPrescaler(prescaller);
+	PWR_AWU_SetWindowValue(count);
+	PWR_AutoWakeUpCmd(ENABLE);
+	
+	__WFE();
+}
