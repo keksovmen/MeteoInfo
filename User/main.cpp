@@ -10,36 +10,30 @@
 // #include "m_disk_io.h"
 // #include "m_fs.h"
 
-#include "m_aht20.hpp"
-
 #include "debug.h"
 
-#include "m_i2c_hal.hpp"
-#include "m_hal_ssd1315.hpp"
-#include "m_buffered_display.hpp"
-#include "m_font_writer.hpp"
-#include "m_graph_drawer.hpp"
 #include "m_sys_time.hpp"
 #include "m_sleep.hpp"
 #include "m_button.hpp"
+#include "m_timer.hpp"
+#include "m_fsm.hpp"
 
 
 
-#define _TEST_STORAGE_SIZE 10
+static timers::TimerCounter _sleepModeTimer(10000);
+//how often to measure data
+static timers::TimerCounter _sensorTimer(1000);
 
+static states::DeepSleepState _deepSleepState;
+static states::CurrentValueState _currentValueState;
+static states::GraphValueState _valueState;
+static etl::ifsm_state* _stateList[states::StateId::NUMBER_OF_STATES] = {
+	&_deepSleepState,
+	&_currentValueState,
+	&_valueState
+};
+static states::GuiMachine _machine;
 
-
-static periph::I2C_Hal i2c;
-
-static display::HalDisplaySSD1315 ssd1315(i2c);
-static display::PartitionBufferedWriter<128, decltype(ssd1315)> writer(ssd1315);
-static display::FontWriter<decltype(writer)> font(writer);
-static display::GraphDrawer<decltype(writer)> graph(writer, font);
-static periph::Aht20 aht(i2c);
-static std::array<std::pair<int32_t, int32_t>, _TEST_STORAGE_SIZE> _dataEntries;
-static int _count = 0;
-
-// static FATFS _fs;
 
 
 
@@ -48,7 +42,7 @@ static int _test_aht20(void)
 	Delay_Ms(100);
 
 	// Initialize sensor
-	if (!aht.init()) {
+	if (!globals::getSensor().init()) {
 		printf("AHT20 initialization failed!\r\n");
 		return -1;
 	}
@@ -56,16 +50,51 @@ static int _test_aht20(void)
 	printf("AHT20 initialized successfully\r\n");
 	
 	// Read sensor data
-	const auto data = aht.readTempAndHum();
+	const auto data = globals::getSensor().readTempAndHum();
 
-	// if (aht20_read_temperature_humidity(&i2c, &sensor_data)) {
-	printf("Temperature: %d.%d °C\r\n", data.first / 100, abs(data.second % 100));
+	// if (aht20_read_temperature_humidity(&_i2c, &sensor_data)) {
+	printf("Temperature: %d.%d °C\r\n", data.first / 100, abs(data.first % 100));
 	printf("Humidity: %d.%d %%\r\n", data.second / 100, abs(data.second % 100));
 	// } else {
 	// 	printf("Failed to read sensor data\r\n");
 	// }
 	
 	return 0;
+}
+
+
+
+static void _loop()
+{
+	const bool keyEvent = periph::buttons::hasEvent();
+	if(keyEvent){
+		_sleepModeTimer.reset();
+		_sleepModeTimer.start();
+	}
+
+	const bool dataEvent = !_sensorTimer.update();
+	if(dataEvent){
+		_sensorTimer.reset();
+
+		// std::copy_backward(_dataEntries.begin(), _dataEntries.end() - 1, _dataEntries.end());
+		// _dataEntries[0] = globals::getSensor().readTempAndHum();
+	}
+
+	const bool sleepEvent = !_sleepModeTimer.update();
+
+	if(dataEvent){
+		_machine.receive(states::DataEvent());
+	}
+
+	if(keyEvent){
+		_machine.receive(states::ButtonClickEvent(periph::buttons::getLastEvent()));
+	}
+
+	if(sleepEvent){
+		_machine.receive(states::TimeoutEvent());
+	}
+
+	_machine.receive(states::TickEvent());
 }
 
 
@@ -87,13 +116,20 @@ int main (void) {
 
 	// USARTx_CFG();
 
-	i2c.init(100000);
+	globals::getI2c().init(100000);
 
 	_test_aht20();
-
 	
-	ssd1315.init();
-	ssd1315.clearScreen();
+	globals::getDisplayHal().init();
+	globals::getDisplayHal().clearScreen();
+
+	_machine.set_states(_stateList, ETL_ARRAY_SIZE(_stateList));
+	_machine.start();
+
+	while (1) {
+		// printf ("Cycle\r\n");
+		_loop();
+	}
 
 	// char buff[8] = {0, 0, 0, 0};
 
@@ -142,46 +178,4 @@ int main (void) {
 	}
 	*/
 
-
-	while (1) {
-		ssd1315.turnOn();
-		printf ("Cycle\r\n");
-		if(periph::buttons::hasEvent()){
-			auto e = periph::buttons::getLastEvent();
-			printf("Event: %d, duration %d\r\n", static_cast<int>(e.action), e.duration);
-		}
-		// std::copy(_dataEntries.begin(), _dataEntries.end() - 1, &_dataEntries[1]);
-		std::copy_backward(_dataEntries.begin(), _dataEntries.end() - 1, _dataEntries.end());
-		// for(int i = _dataEntries.size() - 1; i > 0; i--){
-		// 	_dataEntries[i] = _dataEntries[i - 1];
-		// }
-
-		_dataEntries[0] = aht.readTempAndHum();
-		auto& data = _dataEntries[0];
-		
-		printf("Temperature: %d.%d °C\r\n", data.first / 100, abs(data.second % 100));
-		printf("Humidity: %d.%d %%\r\n", data.second / 100, abs(data.second % 100));
-
-		std::array<int32_t, _TEST_STORAGE_SIZE> tmp;
-		std::transform(_dataEntries.begin(), _dataEntries.end(), tmp.begin(), [](const auto& e){ return (_count < 5) ? e.first : e.second; });
-
-		// std::for_each(_dataEntries.begin(), _dataEntries.end(), [](auto& e){printf("%d.%d\r\n", (int) e.first, (int) ((e.first - (int) e.first) * 100));});
-		// std::for_each(tmp.begin(), tmp.end(), [](auto& e){printf("%d.%d\r\n", (int) e, (int) ((e - (int) e) * 100));});
-		graph.setLabel((_count < 5) ? "TEMPERATURE C" : "HUMIDITY %");
-		// writer.addDrawAction([](){
-		// 	char buff[16] = {0};
-		// 	sprintf(buff, "%u", periph::sys_time::currentMs());
-		// 	font.drawStr(0, 56, buff);
-		// });
-		graph.drawGraph({tmp.begin(), _TEST_STORAGE_SIZE});
-
-		writer.clearDrawActions();
-
-		_count = (_count + 1) % 10;
-
-		Delay_Ms(500);
-
-		ssd1315.turnOff();
-		periph::sleep::sleepForMs<5000>();
-	}
 }
