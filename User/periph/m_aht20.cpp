@@ -109,6 +109,7 @@ const std::pair<int32_t, int32_t>& Aht20::readTempAndHum()
 							  ((uint32_t)raw_data[4] << 8) |
 							  raw_data[5];
 	
+	//because of this we get __muldi3 and __divsi3
 	_lastValue = {(int32_t)(((temperature_raw * 20000ll) / 1048576ll) - 5000),
 			((humidity_raw * 10000ll) / 1048576ll)};
 	

@@ -2,6 +2,10 @@
 
 
 
+#define _BATTERY_ADC_CHANNEL 7
+
+
+
 static periph::I2C_Hal _i2c;
 
 static display::HalDisplaySSD1315 _ssd1315(_i2c);
@@ -10,6 +14,7 @@ static display::FontWriter<decltype(_displayWriter)> _font(_displayWriter);
 static display::GraphDrawer<decltype(_displayWriter)> _graph(_displayWriter, _font);
 
 static periph::Aht20 _aht(_i2c);
+static periph::Battery _battery(_BATTERY_ADC_CHANNEL);
 
 
 
@@ -41,4 +46,9 @@ display::GraphDrawer<display::PartitionBufferedWriter<128, display::HalDisplaySS
 periph::Aht20& globals::getSensor()
 {
 	return _aht;
+}
+
+periph::Battery& globals::getBattery()
+{
+	return _battery;
 }

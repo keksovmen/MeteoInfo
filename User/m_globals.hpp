@@ -4,6 +4,7 @@
 #include "m_hal_ssd1315.hpp"
 #include "m_graph_drawer.hpp"
 #include "m_aht20.hpp"
+#include "m_battery.hpp"
 
 
 
@@ -17,4 +18,5 @@ namespace globals
 	display::GraphDrawer<display::PartitionBufferedWriter<128, display::HalDisplaySSD1315>>& getGraphWriter();
 
 	periph::Aht20& getSensor();
+	periph::Battery& getBattery();
 }

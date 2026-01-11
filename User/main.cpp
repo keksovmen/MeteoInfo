@@ -75,9 +75,10 @@ static void _loop()
 	const bool dataEvent = !_sensorTimer.update();
 	if(dataEvent){
 		_sensorTimer.reset();
+		globals::getSensor().readTempAndHum();
 
-		// std::copy_backward(_dataEntries.begin(), _dataEntries.end() - 1, _dataEntries.end());
-		// _dataEntries[0] = globals::getSensor().readTempAndHum();
+		//push data to some sort of store
+		printf("Battery: %u, %u\r\n", globals::getBattery().readRaw(), globals::getBattery().readPercents());
 	}
 
 	const bool sleepEvent = !_sleepModeTimer.update();
@@ -122,6 +123,7 @@ int main (void) {
 	
 	globals::getDisplayHal().init();
 	globals::getDisplayHal().clearScreen();
+	globals::getBattery().init();
 
 	_machine.set_states(_stateList, ETL_ARRAY_SIZE(_stateList));
 	_machine.start();
