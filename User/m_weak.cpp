@@ -29,6 +29,7 @@ extern "C" char* itoa(int value, char* str, int base = 10) {
     
     // Terminate string
     *rev_ptr = '\0';
+	char* end = rev_ptr;
     
     // Reverse the string
     rev_ptr--;
@@ -40,7 +41,7 @@ extern "C" char* itoa(int value, char* str, int base = 10) {
         rev_ptr--;
     }
     
-    return ptr + 1;
+    return end;
 }
 
 // Minimal sprintf that only handles %d
