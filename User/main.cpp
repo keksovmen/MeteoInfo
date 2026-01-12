@@ -115,8 +115,6 @@ int main (void) {
 	printf ("SystemClk:%u\r\n", SystemCoreClock);
 	printf ("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
 
-	// USARTx_CFG();
-
 	globals::getI2c().init(100000);
 
 	_test_aht20();
@@ -125,6 +123,11 @@ int main (void) {
 	globals::getDisplayHal().clearScreen();
 	globals::getBattery().init();
 
+	globals::getPwm().enable();
+	globals::getPwm().enablePin(periph::Pwm::Pin::PIN_0);
+	globals::getPwm().writePin(periph::Pwm::Pin::PIN_0, 500);
+
+
 	_machine.set_states(_stateList, ETL_ARRAY_SIZE(_stateList));
 	_machine.start();
 
@@ -132,52 +135,4 @@ int main (void) {
 		// printf ("Cycle\r\n");
 		_loop();
 	}
-
-	// char buff[8] = {0, 0, 0, 0};
-
-	// m_fs_t fs;
-	// printf("Init result = %d\r\n", m_fs_init(&fs));
-
-	// m_fs_file_t root;
-	// printf("Open result = %d, size = %d\r\n", m_fs_open(NULL, M_FS_OPEN_MODE_WRITE, &root), root.sizeB);
-	// printf("Write result = %d, size = %d\r\n", m_fs_write(&root, (const uint8_t*) "AHAHAHA", 8), root.sizeB);
-	// printf("Open result = %d, size = %d\r\n", m_fs_open(NULL, M_FS_OPEN_MODE_WRITE, &root), root.sizeB);
-	// printf("Read result = %d\t%s\r\n", m_fs_read(&root, (uint8_t*) buff, 8), buff);
-
-
-	// printf("Init result = %d\r\n", m_disk_io_init());
-	// printf("Write result = %d\r\n", m_disk_io_write((const uint8_t*) "123", 15, 200, 3));
-	// printf("Write result = %d\r\n", m_disk_io_write((const uint8_t*) "456", 16, 155, 3));
-	// printf("Read result = %d, %s\r\n", m_disk_io_read((uint8_t*) buff, 15, 200, 3), buff);
-	// printf("Read result = %d, %s\r\n", m_disk_io_read((uint8_t*) buff, 16, 155, 3), buff);
-	/*
-	FRESULT res = pf_mount(&_fs);
-	printf("Mount result = %d\r\n", res);
-
-	res = pf_open("ASDTXT~1.TXT");
-	printf("Open result = %d\r\n", res);
-
-	UINT _;
-	res = pf_write("test_text\r\n", sizeof("test_text\r\n"), &_);
-	printf("Write result = %d, written = %d\r\n", res, _);
-
-	res = pf_mount(&_fs);
-	printf("Mount result = %d\r\n", res);
-
-	DIR dir;
-	res = pf_opendir(&dir, "");
-	printf("Open dir result = %d\r\n", res);
-
-	while(true){
-		FILINFO info;
-		res = pf_readdir(&dir, &info);
-		printf("Read dir result = %d\r\n", res);
-
-		printf("Dir = %s\r\n", info.fname);
-		if(strlen(info.fname) == 0){
-			break;
-		}
-	}
-	*/
-
 }

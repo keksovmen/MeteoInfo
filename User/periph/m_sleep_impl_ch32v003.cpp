@@ -27,7 +27,7 @@ void periph::sleep::init()
 
 void periph::sleep::sleepImpl(uint32_t prescaller, uint32_t count)
 {
-	//stop timer and reset it if was running
+	// stop timer and reset it if was running
 	PWR_AutoWakeUpCmd(DISABLE);
 
 	RCC_LSICmd(ENABLE);
@@ -37,8 +37,8 @@ void periph::sleep::sleepImpl(uint32_t prescaller, uint32_t count)
 	PWR_AWU_SetWindowValue(count);
 	PWR_AutoWakeUpCmd(ENABLE);
 
-	//sleep
-	PWR_EnterSTANDBYMode(PWR_STANDBYEntry_WFE);
+	// sleep
+	// PWR_EnterSTANDBYMode(PWR_STANDBYEntry_WFE);
 
 	//reinit clock settings if needed
 }

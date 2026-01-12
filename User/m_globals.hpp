@@ -5,6 +5,7 @@
 #include "m_graph_drawer.hpp"
 #include "m_aht20.hpp"
 #include "m_battery.hpp"
+#include "m_pwm.hpp"
 
 
 
@@ -19,4 +20,5 @@ namespace globals
 
 	periph::Aht20& getSensor();
 	periph::Battery& getBattery();
+	periph::Pwm& getPwm();
 }

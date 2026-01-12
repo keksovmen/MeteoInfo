@@ -202,6 +202,9 @@ namespace states
 
 					sprintf(buff, "BAT: %d, %d %", (int) globals::getBattery().readRaw(), (int) globals::getBattery().readPercents());
 					globals::getFontWriter().drawStr(0, 32, buff);
+
+					sprintf(buff, "TIME: %d ms", (int) periph::sys_time::currentMs());
+					globals::getFontWriter().drawStr(0, 32, buff);
 				});
 				globals::getDisplayWriter().flush();
 				globals::getDisplayWriter().clearDrawActions();

@@ -15,6 +15,7 @@ static display::GraphDrawer<decltype(_displayWriter)> _graph(_displayWriter, _fo
 
 static periph::Aht20 _aht(_i2c);
 static periph::Battery _battery(_BATTERY_ADC_CHANNEL);
+static periph::Pwm _pwm(1);
 
 
 
@@ -51,4 +52,9 @@ periph::Aht20& globals::getSensor()
 periph::Battery& globals::getBattery()
 {
 	return _battery;
+}
+
+periph::Pwm& globals::getPwm()
+{
+	return _pwm;
 }

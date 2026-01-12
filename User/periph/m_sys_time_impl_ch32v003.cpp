@@ -30,6 +30,14 @@ extern "C"
 			_ticks ++;
 		}
 	}
+
+	// void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
+	// void SysTick_Handler(void)
+	// {
+	// 	SysTick->SR = 0;
+	// 	_ticks++;
+	// 	printf("1");
+	// }
 }
 
 
@@ -62,6 +70,16 @@ void periph::sys_time::init(time_val tickHz)
 	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
 
 	TIM_Cmd(TIM2, ENABLE);
+
+	// we can't use it because Delay function is using it
+	// NVIC_EnableIRQ(SysTicK_IRQn);
+    // SysTick->SR &= ~(1 << 0);
+	// //put here value to calculate
+    // SysTick->CMP = (SystemCoreClock / tickHz) - 1;
+	// //current value
+    // SysTick->CNT = 0;
+	// //settings
+    // SysTick->CTLR = 0xF;
 }
 
 void periph::sys_time::increaseTime(time_val ms)
