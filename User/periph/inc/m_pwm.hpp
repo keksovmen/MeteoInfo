@@ -27,7 +27,7 @@ namespace periph
 			/**
 			 * @brief Construct a new Pwm object
 			 * 
-			 * @param frequencyHz [1; 24000]
+			 * @param frequencyHz [2; 94110]
 			 */
 			Pwm(int frequencyHz);
 
@@ -41,9 +41,9 @@ namespace periph
 			 * @brief set duty ratio for given pin
 			 * 
 			 * @param pin 
-			 * @param val [0; 1000]
+			 * @param val [0; 255]
 			 */
-			void writePin(Pin pin, uint16_t val);
+			void writePin(Pin pin, uint8_t val);
 		
 		private:
 			const int _frequencyHz;

@@ -36,7 +36,7 @@ void Pwm::enable()
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 
 	TIM_TimeBaseInitTypeDef timCfg = {0};
-	timCfg.TIM_Period = 1000;
+	timCfg.TIM_Period = 255;
 	timCfg.TIM_Prescaler = SystemCoreClock / (timCfg.TIM_Period * _frequencyHz);	//convert frequency to prescaller 
 	timCfg.TIM_ClockDivision = TIM_CKD_DIV1;
 	timCfg.TIM_CounterMode = TIM_CounterMode_Up;
@@ -102,12 +102,8 @@ void Pwm::disablePin(Pin pin)
 	GPIO_WriteBit(_MAP_DEFAULT[static_cast<int>(pin)].port, _MAP_DEFAULT[static_cast<int>(pin)].pin, Bit_RESET);
 }
 
-void Pwm::writePin(Pin pin, uint16_t val)
+void Pwm::writePin(Pin pin, uint8_t val)
 {
-	if(val > 1000){
-		val = 1000;
-	}
-
 	switch (pin)
 	{
 		case Pwm::Pin::PIN_0:
