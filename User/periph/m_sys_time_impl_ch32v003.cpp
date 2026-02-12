@@ -99,5 +99,5 @@ time_val periph::sys_time::currentTick()
 
 time_val periph::sys_time::toMs(time_val ticks)
 {
-	return ticks * (1000 / _tickRate);
+	return (ticks * 1000) / _tickRate;
 }
