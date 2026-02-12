@@ -17,46 +17,37 @@ namespace timers
 
 			}
 
-			void start()
+			operator bool() const
 			{
-				_lastTick = periph::sys_time::currentTick();
+				return update();
 			}
 
 			/**
 			 * @brief 
 			 * 
-			 * @return true still counting
-			 * @return false time is out
+			 * @return true timer is expired
+			 * @return false still runing
 			 */
 
-			bool update()
+			bool update() const
 			{
-				if(isEnded()){
-					return false;
-				}
-				
-				auto delta = periph::sys_time::currentTick() - _lastTick;
-				_currentTimeMs += periph::sys_time::toMs(delta);
-				_lastTick = periph::sys_time::currentTick();
+				const auto delta = periph::sys_time::currentTick() - _startTick;
 
-				return !isEnded();
-			}
-
-			bool isEnded()
-			{
-				return _currentTimeMs >= _periodMs;
+				return periph::sys_time::toMs(delta) >= _periodMs;
 			}
 
 			void reset()
 			{
-				_currentTimeMs = 0;
+				_startTick = periph::sys_time::currentTick();
+			}
+
+			void changePeriod(periph::sys_time::time_val periodMs)
+			{
+				_periodMs = periodMs;
 			}
 
 		private:
 			periph::sys_time::time_val _periodMs;
-			periph::sys_time::time_val _currentTimeMs = 0;
-			periph::sys_time::time_val _lastTick = 0;
-
-
+			periph::sys_time::time_val _startTick = 0;
 	};
 }
