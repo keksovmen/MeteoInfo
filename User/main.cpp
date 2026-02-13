@@ -105,7 +105,7 @@ int main (void) {
 	SystemCoreClockUpdate();
 	Delay_Init();
 	periph::sleep::init();
-	periph::sys_time::init(100);
+	periph::sys_time::init(globals::LED_LOOP_FREQUENCY);
 	periph::buttons::init(1500, {});
 #if (SDI_PRINT == SDI_PR_OPEN)
 	SDI_Printf_Enable();
@@ -117,7 +117,10 @@ int main (void) {
 
 	globals::getI2c().init(100000);
 
-	_test_aht20();
+	if (!globals::getSensor().init()) {
+		printf("AHT20 initialization failed!\r\n");
+		return -1;
+	}
 	
 	globals::getDisplayHal().init();
 	globals::getDisplayHal().clearScreen();

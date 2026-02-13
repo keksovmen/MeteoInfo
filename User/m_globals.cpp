@@ -9,13 +9,14 @@
 static periph::I2C_Hal _i2c;
 
 static display::HalDisplaySSD1315 _ssd1315(_i2c);
-static display::PartitionBufferedWriter<128, decltype(_ssd1315)> _displayWriter(_ssd1315);
+static globals::DisplayWriter _displayWriter(_ssd1315);
 static display::FontWriter<decltype(_displayWriter)> _font(_displayWriter);
 static display::GraphDrawer<decltype(_displayWriter)> _graph(_displayWriter, _font);
 
 static periph::Aht20 _aht(_i2c);
 static periph::Battery _battery(_BATTERY_ADC_CHANNEL);
 static periph::Pwm _pwm(5000);
+static globals::RgbDriver _ledDriver(_pwm);
 
 
 
@@ -29,17 +30,17 @@ display::HalDisplaySSD1315& globals::getDisplayHal()
 	return _ssd1315;
 }
 
-display::PartitionBufferedWriter<128, display::HalDisplaySSD1315>& globals::getDisplayWriter()
+globals::DisplayWriter& globals::getDisplayWriter()
 {
 	return _displayWriter;
 }
 
-display::FontWriter<display::PartitionBufferedWriter<128, display::HalDisplaySSD1315>>& globals::getFontWriter()
+display::FontWriter<globals::DisplayWriter>& globals::getFontWriter()
 {
 	return _font;
 }
 
-display::GraphDrawer<display::PartitionBufferedWriter<128, display::HalDisplaySSD1315>>& globals::getGraphWriter()
+display::GraphDrawer<globals::DisplayWriter>& globals::getGraphWriter()
 {
 	return _graph;
 }
@@ -57,4 +58,9 @@ periph::Battery& globals::getBattery()
 periph::Pwm& globals::getPwm()
 {
 	return _pwm;
+}
+
+globals::RgbDriver& globals::getLedDriver()
+{
+	return _ledDriver;
 }

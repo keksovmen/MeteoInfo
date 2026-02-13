@@ -13,24 +13,34 @@
 
 namespace periph
 {
+	enum class LedDriverMode : uint8_t
+	{
+		SLOW = 0,
+		NORMAL,
+		FAST,
+	};
+
+
+
 	template<periph::Pwm::Pin... Pins>
 	class LedDriver
 	{
 		public:
-			enum class Mode
+			LedDriver(periph::Pwm& pwm)
+				: _pwm(pwm)
 			{
-				SLOW,
-				NORMAL,
-				FAST,
-			};
 
+			}
 
+			/**
+			 * @brief must call 2550 times per second as main loop
+			 */
 
 			void tick()
 			{
 				for(_Entry& e : _entries){
 					uint8_t duty = e.function(e.tick++, e.multiplier, &e.store);
-					globals::getPwm().writePin(e.pin, duty);
+					_pwm.writePin(e.pin, duty);
 
 					// switch pattern logic here
 					if(e.tick == e.finishTick){
@@ -38,11 +48,10 @@ namespace periph
 						const uint8_t patternDurationMul = std::max(durationMul, _patternDurDist(_rand));
 						const uint8_t repeatCount = patternDurationMul / durationMul;
 
-						e.multiplier = durationMul;
 						e.tick = 0;
-
-						//better use tick counter for this purpose
-						e.finishTick = static_cast<uint32_t>(durationMul) * repeatCount * 255u;
+						e.store = 0;
+						e.multiplier = durationMul;
+						e.finishTick = static_cast<uint32_t>(durationMul) * repeatCount * 255u;	// * 255 is PWM resolution
 					}
 				}
 			}
@@ -56,25 +65,17 @@ namespace periph
 				}
 			}
 
-			void setMode(Mode mode)
+			void setMode(LedDriverMode mode)
 			{
-				switch (mode)
-				{
-					case Mode::SLOW:
-						_durationDist = std::uniform_int_distribution<uint8_t>(10, 100);
-						_patternDurDist = std::uniform_int_distribution<uint8_t>(20, 200);
-						break;
+				const uint8_t modeMap[3][4] = {
+					{20, 100, 20, 255},	//slow
+					{2, 50, 5, 100},	//normal
+					{2, 15, 5, 80},		//fast
+				};
 
-					case Mode::NORMAL:
-						_durationDist = std::uniform_int_distribution<uint8_t>(2, 50);
-						_patternDurDist = std::uniform_int_distribution<uint8_t>(5, 100);
-						break;
-
-					case Mode::FAST:
-						_durationDist = std::uniform_int_distribution<uint8_t>(2, 20);
-						_patternDurDist = std::uniform_int_distribution<uint8_t>(5, 40);
-						break;
-				}
+				const uint8_t index = static_cast<uint8_t>(mode);
+				_durationDist = std::uniform_int_distribution<uint8_t>(modeMap[index][0], modeMap[index][1]);
+				_patternDurDist = std::uniform_int_distribution<uint8_t>(modeMap[index][2], modeMap[index][3]);
 
 				_mode = mode;
 			}
@@ -106,12 +107,12 @@ namespace periph
 
 
 
-
+			periph::Pwm& _pwm;
 			std::array<_Entry, N> _entries{Pins...};
-			std::minstd_rand _rand{0};
-			std::uniform_int_distribution<uint8_t> _durationDist{2, 10};
-			std::uniform_int_distribution<uint8_t> _patternDurDist{4, 20};
-			Mode _mode = Mode::NORMAL;
+			std::minstd_rand _rand;
+			std::uniform_int_distribution<uint8_t> _durationDist;
+			std::uniform_int_distribution<uint8_t> _patternDurDist;
+			LedDriverMode _mode;
 
 
 
@@ -138,6 +139,16 @@ namespace periph
 				const uint16_t result = (tick / multiplier) % 256u;
 
 				return (result > 127u) ? 255u : 0u;
+			}
+
+			static uint8_t _on(uint32_t tick, uint8_t multiplier, uint32_t* data)
+			{
+				return 255u;
+			}
+
+			static uint8_t _off(uint32_t tick, uint8_t multiplier, uint32_t* data)
+			{
+				return 0u;
 			}
 	};
 }
