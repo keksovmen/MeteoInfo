@@ -42,6 +42,9 @@ namespace periph
 		void init(sys_time::time_val longPressMs, std::function<void()>&& stab);
 		bool hasEvent();
 		Event getLastEvent();
+		void enableIrq();
+		void disableIqr();
+		bool pull();
 
 		// 	private:
 		// 		const StabIRQ _stab;

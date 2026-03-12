@@ -26,6 +26,7 @@ namespace states
 			BUTTON_CLICK,
 			TICK,
 			DATA_EVENT,
+			WAKEUP
 		};
 	};
 
@@ -66,6 +67,13 @@ namespace states
 
 
 
+	class WakeupEvent : public etl::message<EventId::WAKEUP>
+	{
+
+	};
+
+
+
 	struct StateId
 	{
 		enum
@@ -73,6 +81,7 @@ namespace states
 			DEEP_SLEEP,
 			CURRENT_VALUE,
 			GRAPH,
+			LED,
 			NUMBER_OF_STATES,
 		};
 	};
@@ -91,39 +100,43 @@ namespace states
 
 
 
-	class DeepSleepState : public etl::fsm_state<GuiMachine, DeepSleepState, StateId::DEEP_SLEEP, ButtonClickEvent, TickEvent>
+	class DeepSleepState : public etl::fsm_state<GuiMachine, DeepSleepState, StateId::DEEP_SLEEP, WakeupEvent, TickEvent>
 	{
 		public:
-			etl::fsm_state_id_t on_enter_state()
+			etl::fsm_state_id_t on_enter_state() override
 			{
 				printf("Entered Deep sleep state\r\n");
 				globals::getDisplayHal().turnOff();
-
+				periph::buttons::enableIrq();
 				//go to sleep
 				//change sleep mode
 				return No_State_Change;
 			}
 
-			void on_exit_state()
+			void on_exit_state() override
 			{
+				periph::buttons::disableIqr();
 				//change sleep mode to usual
 			}
 
-			etl::fsm_state_id_t on_event(const ButtonClickEvent& event)
+			etl::fsm_state_id_t on_event(const WakeupEvent& event)
 			{
-				printf("Clicked in deep sleep\r\n");
+				printf("Wakeup in deep sleep\r\n");
 
 				return StateId::CURRENT_VALUE;
 			}
 
 			etl::fsm_state_id_t on_event(const TickEvent& event)
 			{
-				printf("Tick in deep sleep\r\n");
-				//increment sys time by constant
-				periph::sys_time::increaseTime(5000);
+				// printf("Tick in deep sleep\r\n");
 				//read aht if needed and push it data -> global call to sensor service tick
 				//go to sleep
 				periph::sleep::sleepForMs<5000>();
+				//here we are woken up by timeout or by click
+
+				//increment sys time by constant
+				//calculate this time from register value
+				periph::sys_time::increaseTime(5000);
 
 				return No_State_Change;
 			}
@@ -165,7 +178,7 @@ namespace states
 
 			etl::fsm_state_id_t on_event(const TickEvent& event)
 			{
-				printf("Tick in Current value\r\n");
+				// printf("Tick in Current value\r\n");
 				//increment sys time by constant
 				// periph::sys_time::increaseTime(5000);
 				//read aht if needed and push it data -> global call to sensor service tick
@@ -213,7 +226,7 @@ namespace states
 
 
 
-	class GraphValueState : public etl::fsm_state<GuiMachine, GraphValueState, StateId::CURRENT_VALUE, ButtonClickEvent, TimeoutEvent, DataEvent>
+	class GraphValueState : public etl::fsm_state<GuiMachine, GraphValueState, StateId::GRAPH, ButtonClickEvent, TimeoutEvent, DataEvent>
 	{
 		public:
 			etl::fsm_state_id_t on_enter_state()
@@ -226,9 +239,9 @@ namespace states
 
 			etl::fsm_state_id_t on_event(const ButtonClickEvent& event)
 			{
-				printf("Clicked in graph\r\n");
+				printf("Clicked in led\r\n");
 
-				return No_State_Change;
+				return StateId::LED;
 			}
 
 			etl::fsm_state_id_t on_event(const TimeoutEvent& event)
@@ -275,5 +288,69 @@ namespace states
 
 				_count = (_count + 1) % 10;
 			}
+	};
+
+
+
+	class LedState : public etl::fsm_state<GuiMachine, LedState, StateId::LED, ButtonClickEvent, TickEvent>
+	{
+		public:
+			etl::fsm_state_id_t on_enter_state() override
+			{
+				printf("Entered Led state\r\n");
+				_count = 0;
+				//TODO: make PWM pins exists somewhere in config file not here
+				globals::getLedDriver().restart();
+				globals::getLedDriver().setSpeedMode(periph::LedSpeedMode::FAST);
+				globals::getLedDriver().setPatternMode(periph::LedPatternMode::BLINK);
+
+				globals::getPwm().enable();
+				globals::getPwm().enablePin(periph::Pwm::Pin::PIN_0);
+				globals::getPwm().enablePin(periph::Pwm::Pin::PIN_2);
+				globals::getPwm().enablePin(periph::Pwm::Pin::PIN_3);
+
+				return No_State_Change;
+			}
+
+			void on_exit_state() override
+			{
+				printf("Exited Led state\r\n");
+
+				//TODO: make sure everything is at proper logic levels
+				globals::getPwm().disable();
+				globals::getPwm().disablePin(periph::Pwm::Pin::PIN_0);
+				globals::getPwm().disablePin(periph::Pwm::Pin::PIN_2);
+				globals::getPwm().disablePin(periph::Pwm::Pin::PIN_3);
+			}
+
+			etl::fsm_state_id_t on_event(const ButtonClickEvent& event)
+			{
+				printf("Clicked in Led\r\n");
+				_count++;
+				if(_count >= 3){
+					return StateId::DEEP_SLEEP;
+				}
+
+				return No_State_Change;
+			}
+
+			etl::fsm_state_id_t on_event(const TickEvent& event)
+			{
+				// printf("Tick in Led\r\n");
+				globals::getLedDriver().tick();
+				_WFE();
+
+				return No_State_Change;
+			}
+
+			etl::fsm_state_id_t on_event_unknown(const etl::imessage& event)
+			{
+				return No_State_Change;
+			}
+		
+
+
+		private:
+			int _count = 0;
 	};
 }

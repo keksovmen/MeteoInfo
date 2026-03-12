@@ -12,6 +12,8 @@
 #define _PIN_SOURCE GPIO_PinSource0
 #define _LINE EXTI_Line0
 
+#define _DEBOUNCE_TIME_MS 100
+
 
 
 using namespace periph;
@@ -33,8 +35,12 @@ static sys_time::time_val _pressedAt = 0;
 
 static void _press()
 {
+	if(_isPressed){
+		return;
+	}
+
 	_isPressed = true;
-	_pressedAt = sys_time::currentTick();	
+	_pressedAt = sys_time::currentTick();
 }
 
 static void _release()
@@ -42,13 +48,21 @@ static void _release()
 	if(!_isPressed){
 		return;
 	}
+
 	_isPressed = false;
+
+	const sys_time::time_val durationMs = sys_time::toMs(sys_time::currentTick() - _pressedAt);
+
+	//TODO: fix for deep sleep irq
+	if(durationMs < _DEBOUNCE_TIME_MS){
+		// bounce time
+		return;
+	}
+
+	_event.duration = durationMs;
+	_event.action = (durationMs > _longPressDuration) ? Action::LONG_RELEASED : Action::RELEASED;
+
 	_eventFlag = true;
-
-	sys_time::time_val duration = sys_time::toMs(sys_time::currentTick() - _pressedAt);
-
-	_event.duration = duration;
-	_event.action = (duration > _longPressDuration) ? Action::LONG_RELEASED : Action::RELEASED;
 }
 
 
@@ -63,12 +77,19 @@ extern "C"{
 				std::invoke(_stab);
 			}
 
-			if(GPIO_ReadInputDataBit(_PORT, _PIN)){
-				_release();
-			}else{
-				_press();
-			}
+
+			//need somehow just create wakeup event not button event
+			// _event.duration = 0;
+			// _event.action = Action::RELEASED;
+			// _eventFlag = true;
+
+			// if(GPIO_ReadInputDataBit(_PORT, _PIN)){
+			// 	_release();
+			// }else{
+			// 	_press();
+			// }
 			
+			// do not clear???
 			EXTI_ClearITPendingBit(_LINE);     /* Clear Flag */
 		}
 	}
@@ -91,13 +112,6 @@ void periph::buttons::init(sys_time::time_val longPressMs, std::function<void()>
 	GPIO_Init(_PORT,  &cfg);
 	GPIO_EXTILineConfig(_PORT_SOURCE, _PIN_SOURCE);
 
-	EXTI_InitTypeDef ext_cfg = {0};
-	ext_cfg.EXTI_Line = _LINE;
-	ext_cfg.EXTI_Mode = EXTI_Mode_Interrupt;
-	ext_cfg.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
-	ext_cfg.EXTI_LineCmd = ENABLE;
-	EXTI_Init(&ext_cfg);
-
     NVIC_InitTypeDef nvic_cfg = {0};
 	nvic_cfg.NVIC_IRQChannel = EXTI7_0_IRQn;
     nvic_cfg.NVIC_IRQChannelPreemptionPriority = 0;
@@ -116,4 +130,32 @@ Event periph::buttons::getLastEvent()
 {
 	_eventFlag = false;
 	return _event;
+}
+
+void periph::buttons::enableIrq()
+{
+	EXTI_InitTypeDef ext_cfg = {0};
+	ext_cfg.EXTI_Line = _LINE;
+	ext_cfg.EXTI_Mode = EXTI_Mode_Interrupt;
+	//didn't work out as expected
+	// ext_cfg.EXTI_Mode = EXTI_Mode_Event;
+	ext_cfg.EXTI_Trigger = EXTI_Trigger_Falling;
+	ext_cfg.EXTI_LineCmd = ENABLE;
+	EXTI_Init(&ext_cfg);
+}
+
+void periph::buttons::disableIqr()
+{
+	EXTI_DeInit();
+}
+
+bool periph::buttons::pull()
+{
+	if(GPIO_ReadInputDataBit(_PORT, _PIN)){
+		_release();
+	}else{
+		_press();
+	}
+
+	return hasEvent();
 }

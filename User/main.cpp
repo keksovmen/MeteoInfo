@@ -6,17 +6,13 @@
 #include <stdlib.h>
 #include <utility>
 
-// #include "pff.h"
-// #include "m_disk_io.h"
-// #include "m_fs.h"
-
 #include "debug.h"
 
-#include "m_sys_time.hpp"
-#include "m_sleep.hpp"
 #include "m_button.hpp"
-#include "m_timer.hpp"
 #include "m_fsm.hpp"
+#include "m_sleep.hpp"
+#include "m_sys_time.hpp"
+#include "m_timer.hpp"
 
 
 
@@ -27,13 +23,15 @@ static timers::TimerCounter _sensorTimer(1000);
 static states::DeepSleepState _deepSleepState;
 static states::CurrentValueState _currentValueState;
 static states::GraphValueState _valueState;
+static states::LedState _ledState;
 static etl::ifsm_state* _stateList[states::StateId::NUMBER_OF_STATES] = {
 	&_deepSleepState,
 	&_currentValueState,
-	&_valueState
+	&_valueState,
+	&_ledState
 };
 static states::GuiMachine _machine;
-
+static bool _wakeupFlag = false;
 
 
 
@@ -66,22 +64,28 @@ static int _test_aht20(void)
 
 static void _loop()
 {
-	const bool keyEvent = periph::buttons::hasEvent();
-	if(keyEvent){
+	if(_wakeupFlag){
+		_wakeupFlag = false;
+		_machine.receive(states::WakeupEvent());
 		_sleepModeTimer.reset();
-		_sleepModeTimer.start();
 	}
 
-	const bool dataEvent = !_sensorTimer.update();
+	const bool keyEvent = periph::buttons::pull();
+	if(keyEvent){
+		_sleepModeTimer.reset();
+	}
+
+	const bool dataEvent = _sensorTimer.update();
 	if(dataEvent){
 		_sensorTimer.reset();
 		globals::getSensor().readTempAndHum();
 
 		//push data to some sort of store
-		printf("Battery: %u, %u\r\n", globals::getBattery().readRaw(), globals::getBattery().readPercents());
+		// printf("Battery: %u, %u\r\n", globals::getBattery().readRaw(), globals::getBattery().readPercents());
+		// printf("Time: %u / %ums\r\n", periph::sys_time::currentTick(), periph::sys_time::currentMs());
 	}
 
-	const bool sleepEvent = !_sleepModeTimer.update();
+	const bool sleepEvent = _sleepModeTimer.update();
 
 	if(dataEvent){
 		_machine.receive(states::DataEvent());
@@ -106,12 +110,10 @@ int main (void) {
 	Delay_Init();
 	periph::sleep::init();
 	periph::sys_time::init(globals::LED_LOOP_FREQUENCY);
-	periph::buttons::init(1500, {});
-#if (SDI_PRINT == SDI_PR_OPEN)
-	SDI_Printf_Enable();
-#else
+	periph::buttons::init(1500, [](){_wakeupFlag = true;});
+
 	USART_Printf_Init (115200);
-#endif
+	
 	printf ("SystemClk:%u\r\n", SystemCoreClock);
 	printf ("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
 
@@ -124,18 +126,13 @@ int main (void) {
 	
 	globals::getDisplayHal().init();
 	globals::getDisplayHal().clearScreen();
+	//TODO: need calibration
 	globals::getBattery().init();
-
-	globals::getPwm().enable();
-	globals::getPwm().enablePin(periph::Pwm::Pin::PIN_0);
-	globals::getPwm().writePin(periph::Pwm::Pin::PIN_0, 500);
-
 
 	_machine.set_states(_stateList, ETL_ARRAY_SIZE(_stateList));
 	_machine.start();
 
 	while (1) {
-		// printf ("Cycle\r\n");
 		_loop();
 	}
 }

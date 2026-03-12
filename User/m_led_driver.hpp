@@ -167,6 +167,8 @@ namespace periph
 					case WaveFunction::BLINK:
 						duty = _blink(e.tick, e.multiplier, &e.store);
 						break;
+					
+					default: break;
 				}
 				e.tick++;
 				_pwm.writePin(e.pin, duty);
