@@ -198,7 +198,11 @@ namespace display
 			{
 				for (int i = 0; i < _length; i++)
 				{
-					std::invoke(_actions[i]);
+					//without this if check we will get _ZSt25__throw_bad_function_callv that is bunch of code
+					//even if we can guarantee that there is _length valid functions, the compiler doesn't understand it
+					//because std::function can be not initialized by default constructor
+					if(_actions[i])
+						std::invoke(_actions[i]);
 				}
 			}
 	};
