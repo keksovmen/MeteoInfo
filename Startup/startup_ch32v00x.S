@@ -159,8 +159,10 @@ handle_reset:
     ori t0, t0, 3
     csrw mtvec, t0
 
+/* Initialize c++ global objects by their constructors*/
 	la a0,__libc_fini_array
-	call atexit
+	//this way we do not use C++ runtime destructors on exit(), in fact we never call exit()
+	/* call atexit */
 	call __libc_init_array
   
     jal   SystemInit

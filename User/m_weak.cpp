@@ -1,4 +1,26 @@
-#include "stdarg.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+
+
+extern "C"
+{
+	//declaration from libnano used to write to uart as debug
+	extern int _write(int file, const char *ptr, int len);
+}
+
+static void _putchar(char c)
+{
+	_write(1, &c, 1);
+}
+
+static void _putInt(int i)
+{
+	char buff[16] = {0};
+	const char* end = itoa(i, buff, 10);
+	_write(1, buff, end - buff);
+}
 
 
 
@@ -11,12 +33,10 @@ extern "C" char* itoa(int value, char* str, int base = 10) {
     }
 
     char* ptr = str;
-    char* start = str;
     
     // Handle negative numbers
     if (value < 0 && base == 10) {
         *ptr++ = '-';
-        start = ptr;
         value = -value;
     }
     
@@ -72,5 +92,63 @@ extern "C" int __wrap_sprintf(char* buffer, const char* fmt, ...) {
     return buf_ptr - buffer;
 }
 
-//hot to disable all delete something calls for _free_r
-// void operator delete(void*){}
+
+
+//how to disable all delete something calls for _free_r
+//it defines global destructor for C++, all calls to delete will be redirected here
+//since we do not use them, we should be fine
+void operator delete(void*){}
+
+
+
+
+//this will decrease printf size and override lib implementation, that uses bunch of other functions and space
+extern "C" int printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    while (*format) {
+		// i++;
+        if (*format == '%') {
+            format++;   // skip '%'
+            switch (*format) {
+				case 'u':
+                case 'd': {
+                    int i = va_arg(args, int);
+                    _putInt(i);
+                    break;
+                }
+                case 's': {
+                    char *s = va_arg(args, char*);
+                    if (s)
+                        puts(s);
+                    else
+                        puts("(null)");
+                    break;
+                }
+                case 'c': {
+                    char c = (char)va_arg(args, int);
+                    _putchar(c);
+                    break;
+                }
+                case '%': {
+                    _putchar('%');
+                    break;
+                }
+                default:
+                    // Unknown specifier: print '%' and the unknown character
+                    _putchar('%');
+                    _putchar(*format);
+                    break;
+            }
+            format++;   // move past the specifier
+        } else {
+            // Regular character
+            _putchar(*format);
+            format++;
+        }
+    }
+
+    va_end(args);
+	return 0;
+}
